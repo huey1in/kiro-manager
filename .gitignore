@@ -26,8 +26,7 @@ src-tauri/WixTools
 /build
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+.vscode/
 .idea
 .DS_Store
 *.suo
@@ -35,6 +34,12 @@ src-tauri/WixTools
 *.njsproj
 *.sln
 *.sw?
+
+# Kiro settings
+.kiro/
+
+# Reference project (not part of this repo)
+Kiro-account-manager/
 
 # OS
 Thumbs.db
