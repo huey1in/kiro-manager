@@ -1,0 +1,68 @@
+<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 背景渐变 -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9333ea;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#7c3aed;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6b21a8;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- 外发光 -->
+    <filter id="outerGlow">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- 内发光 -->
+    <filter id="innerGlow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- 背景圆角矩形 -->
+  <rect x="8" y="8" width="112" height="112" rx="28" ry="28" 
+        fill="url(#bgGradient)" 
+        filter="url(#outerGlow)" />
+  
+  <!-- 幽灵主体 -->
+  <g filter="url(#innerGlow)" transform="translate(-4, -4)">
+    <!-- 头部和身体，底部三个半圆形驼峰 -->
+    <path d="M64 30 
+             C48 30 36 42 36 58 
+             L36 92
+             L36 96
+             A6 6 0 0 0 42 102
+             A6 6 0 0 1 48 108
+             A6 6 0 0 0 54 102
+             A6 6 0 0 1 60 108
+             A6 6 0 0 0 66 102
+             A6 6 0 0 1 72 108
+             A6 6 0 0 0 78 102
+             A6 6 0 0 1 84 108
+             A6 6 0 0 0 90 102
+             A6 6 0 0 1 96 96
+             L96 92
+             L96 58 
+             C96 42 84 30 64 30 Z" 
+          fill="white" />
+  </g>
+  
+  <!-- 左眼 -->
+  <g transform="translate(-4, -4)">
+    <rect x="50" y="58" width="8" height="14" rx="2" ry="2" fill="#1e293b" />
+    <ellipse cx="52" cy="61" rx="2" ry="3" fill="#0f172a" opacity="0.5" />
+  </g>
+  
+  <!-- 右眼 -->
+  <g transform="translate(-4, -4)">
+    <rect x="70" y="58" width="8" height="14" rx="2" ry="2" fill="#1e293b" />
+    <ellipse cx="76" cy="61" rx="2" ry="3" fill="#0f172a" opacity="0.5" />
+  </g>
+</svg>

@@ -1,0 +1,68 @@
+appId: com.kiro.account-manager
+productName: Kiro Account Manager
+directories:
+  buildResources: build
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+asarUnpack:
+  - resources/**
+protocols:
+  name: Kiro Auth
+  schemes:
+    - kiro
+copyright: Copyright 2026 Kiro
+win:
+  executableName: kiro-account-manager
+  icon: resources/icon.ico
+  legalTrademarks: Copyright 2026 Kiro
+  requestedExecutionLevel: asInvoker
+nsis:
+  artifactName: ${name}-${version}-${arch}-setup.${ext}
+  shortcutName: Kiro 账号管理器
+  uninstallDisplayName: Kiro 账号管理器
+  createDesktopShortcut: always
+  oneClick: false           # 关闭一键安装，显示安装向导
+  allowToChangeInstallationDirectory: true  # 允许选择安装位置
+  perMachine: false
+  runAfterFinish: false     # 安装完不自动启动
+  installerIcon: resources/kiro-high-resolution-logo-transparent.ico
+  uninstallerIcon: resources/kiro-high-resolution-logo-transparent.ico
+mac:
+  identity: null  # 跳过代码签名（没有 Apple 开发者证书时）
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    - NSCameraUsageDescription: Application requests access to the device's camera.
+    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
+    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
+    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+  notarize: false
+  hardenedRuntime: false  # 禁用强化运行时（需要签名）
+dmg:
+  artifactName: ${name}-${version}-${arch}.${ext}
+linux:
+  target:
+    - AppImage
+    - snap
+    - deb
+  executableName: kiro-account-manager
+  maintainer: electronjs.org
+  category: Utility
+deb:
+  afterInstall: build/linux/after-install.sh
+  afterRemove: build/linux/after-remove.sh
+appImage:
+  artifactName: ${name}-${version}-${arch}.${ext}
+snap:
+  publish:
+    provider: generic
+    url: https://example.com/auto-updates
+npmRebuild: false
+publish:
+  provider: github
+  owner: chaogei
+  repo: Kiro-account-manager
