@@ -1,0 +1,165 @@
+/* 列表视图 */
+.account-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.account-list-item {
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  outline: none !important;
+}
+
+.account-list-item:focus,
+.account-list-item:focus-visible,
+.account-list-item:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.account-list-item:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.list-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 160px;
+  min-width: 0;
+}
+
+.list-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.list-item-email {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list-item-nickname-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.list-item-nickname {
+  font-size: 11px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list-item-nickname-row .status-dot {
+  font-size: 10px;
+  margin-left: 0;
+}
+
+.list-item-nickname-row .status-dot::before {
+  width: 5px;
+  height: 5px;
+  margin-right: 4px;
+}
+
+.list-item-center {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  flex: 0 0 auto;
+}
+
+.list-item-center .badge {
+  font-size: 9px;
+  padding: 2px 5px;
+}
+
+.list-item-usage {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 150px;
+}
+
+.list-usage-text {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 70px;
+}
+
+.list-usage-current {
+  color: var(--text-main);
+}
+
+.list-usage-separator {
+  color: var(--text-muted);
+}
+
+.list-usage-limit {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.list-progress-bar {
+  flex: 1;
+  height: 3px;
+  background: var(--slate-200);
+  border-radius: 2px;
+  overflow: hidden;
+  min-width: 40px;
+}
+
+.list-progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.list-progress-fill.warning {
+  background: var(--warning);
+}
+
+.list-usage-percent {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  min-width: 35px;
+  text-align: right;
+}
+
+.list-usage-percent.warning {
+  color: var(--warning);
+}
+
+.list-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.list-item-actions .btn-icon {
+  width: 24px;
+  height: 24px;
+}

@@ -1,0 +1,385 @@
+/* 账号详情模态框 */
+.account-detail-modal {
+  font-family: -apple-system, sans-serif;
+  color: var(--text-main);
+  max-width: 480px;
+}
+
+.detail-header {
+  margin-bottom: 1rem;
+}
+
+.detail-email {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 8px;
+}
+
+.detail-header-bottom {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.detail-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 3px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.detail-sync-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.detail-usage-card {
+  background: var(--slate-50);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.detail-usage-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.detail-usage-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.detail-usage-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1;
+}
+
+.detail-usage-limit {
+  text-align: right;
+}
+
+.detail-usage-limit-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.detail-progress-bg {
+  height: 5px;
+  background: var(--slate-200);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.detail-progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 3px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.detail-grid-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-grid-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.detail-grid-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.detail-grid-value-danger {
+  color: #e11d48;
+}
+
+.detail-user-id {
+  display: flex;
+  align-items: center;
+  background: var(--slate-50);
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.detail-user-id-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-right: 10px;
+  white-space: nowrap;
+}
+
+.detail-user-id-value {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 模态框表单样式 */
+.modal-form {
+  max-width: 600px;
+}
+
+.form-section {
+  margin-bottom: 1rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 6px;
+}
+
+.form-label .required {
+  color: #e11d48;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text-main);
+  outline: none;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.form-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-textarea {
+  resize: none;
+  min-height: 80px;
+  font-family: monospace;
+}
+
+.form-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.mode-switch {
+  display: flex;
+  gap: 8px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 8px 16px;
+  background: var(--slate-50);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mode-btn:hover {
+  background: var(--slate-100);
+}
+
+.mode-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.import-result {
+  margin-top: 1rem;
+}
+
+.result-box {
+  background: var(--slate-50);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.result-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 6px;
+}
+
+.result-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* 登录类型和 Provider 切换按钮 */
+.login-type-switch,
+.provider-switch {
+  display: flex;
+  gap: 8px;
+}
+
+.login-type-btn,
+.provider-btn {
+  flex: 1;
+  padding: 8px 16px;
+  background: var(--slate-50);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.login-type-btn:hover,
+.provider-btn:hover {
+  background: var(--slate-100);
+}
+
+.login-type-btn.active,
+.provider-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+/* 导出对话框样式 */
+.export-dialog {
+  padding: 0;
+}
+
+.export-count {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--slate-100);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.export-formats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.export-format-btn {
+  padding: 16px;
+  background: var(--bg-sidebar);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.export-format-btn:hover {
+  border-color: var(--primary);
+  background: var(--slate-50);
+}
+
+.export-format-btn.active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.export-format-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.export-format-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.export-option {
+  background: var(--slate-50);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.export-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.export-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.export-checkbox-label {
+  flex: 1;
+}
+
+.export-option-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.export-option-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}

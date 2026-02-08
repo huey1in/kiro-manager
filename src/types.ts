@@ -1,7 +1,7 @@
 // 账号类型定义
 export type IdpType = 'Google' | 'Github' | 'BuilderId' | 'Enterprise' | 'AWSIdC' | 'Internal' | 'IAM_SSO'
 export type SubscriptionType = 'Free' | 'Pro' | 'Pro_Plus' | 'Enterprise' | 'Teams'
-export type AccountStatus = 'active' | 'expired' | 'error' | 'refreshing' | 'unknown'
+export type AccountStatus = 'active' | 'expired' | 'error' | 'refreshing' | 'unknown' | 'suspended'
 
 // 筛选类型定义
 export interface AccountFilter {

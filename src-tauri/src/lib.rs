@@ -99,6 +99,7 @@ struct OidcTokenResponse {
 // Kiro GetUserInfo 响应
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 struct UserInfoResponse {
     email: Option<String>,
     user_id: Option<String>,
@@ -273,10 +274,31 @@ async fn verify_account_credentials(
         let status = usage_response.status();
         let error_text = usage_response.text().await.unwrap_or_default();
         println!("[API] GetUsageLimits 失败: {} - {}", status, error_text);
+
+        // 解析错误响应，提取友好的错误信息
+        let friendly_error = if status.as_u16() == 403 {
+            // 尝试解析JSON错误响应
+            if let Ok(error_json) = serde_json::from_str::<serde_json::Value>(&error_text) {
+                if let Some(reason) = error_json.get("reason").and_then(|r| r.as_str()) {
+                    match reason {
+                        "TEMPORARILY_SUSPENDED" => "账号已被临时封禁".to_string(),
+                        "PERMANENTLY_SUSPENDED" => "账号已被永久封禁".to_string(),
+                        _ => format!("账号访问受限: {}", reason)
+                    }
+                } else {
+                    "账号访问被拒绝 (403)".to_string()
+                }
+            } else {
+                "账号访问被拒绝 (403)".to_string()
+            }
+        } else {
+            format!("获取使用量失败 ({})", status)
+        };
+
         return Ok(VerifyCredentialsResponse {
             success: false,
             data: None,
-            error: Some(format!("获取使用量失败 ({}): {}", status, error_text)),
+            error: Some(friendly_error),
         });
     }
     

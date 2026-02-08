@@ -1,0 +1,154 @@
+/* 账号卡片网格 */
+.account-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* 卡片主体 */
+.account-card {
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s;
+  outline: none !important;
+}
+
+.account-card:focus,
+.account-card:focus-visible,
+.account-card:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.account-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* 顶部区域 */
+.card-header,
+.account-card-header {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+/* 自定义勾选框 */
+.checkbox-wrapper {
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+
+.custom-checkbox,
+.account-checkbox {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #cbd5e1;
+  border-radius: 4px;
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.custom-checkbox.checked,
+.account-checkbox.checked {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+/* 邮箱与标签 */
+.header-content,
+.account-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.email,
+.account-email {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta-badges,
+.account-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+
+/* 状态指示点 */
+.status-dot,
+.account-status {
+  font-size: 10px;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+}
+
+.status-dot::before,
+.account-status::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--success);
+  margin-right: 5px;
+}
+
+/* 使用量区域 */
+.usage-box,
+.account-usage {
+  background: var(--slate-50);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.usage-title-row,
+.usage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.usage-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.usage-percent {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* 操作按钮栏 */
+.actions-row,
+.account-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 3px;
+  padding-top: 10px;
+  border-top: 1px solid #f8fafc;
+  margin-top: auto;
+}

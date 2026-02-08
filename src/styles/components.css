@@ -1,0 +1,262 @@
+/* 按钮样式 */
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.ui-btn:focus {
+  outline: none;
+}
+
+.ui-btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.ui-btn-primary:hover {
+  opacity: 0.9;
+}
+
+.ui-btn-secondary {
+  background: var(--bg-sidebar);
+  border-color: var(--border-color);
+  color: var(--text-main);
+}
+
+.ui-btn-secondary:hover {
+  background: var(--slate-100);
+}
+
+.ui-btn-secondary.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.ui-btn-secondary.active:hover {
+  opacity: 0.9;
+}
+
+.ui-btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.ui-btn-danger {
+  background: var(--danger);
+  color: white;
+  border-color: var(--danger);
+}
+
+.ui-btn-danger:hover {
+  opacity: 0.9;
+}
+
+.ui-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ui-btn:disabled:hover {
+  opacity: 0.5;
+}
+
+/* 图标按钮 */
+.btn-icon,
+.ui-btn-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-icon:hover,
+.ui-btn-icon:hover {
+  background: #f1f5f9;
+  color: var(--primary);
+}
+
+.btn-icon.delete:hover {
+  background: #fef2f2;
+  color: var(--danger);
+}
+
+/* 徽章样式 */
+.badge,
+.ui-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.badge-pro {
+  background: var(--slate-50);
+  color: #a855f7;
+  border: 1px solid var(--border-color);
+}
+
+.badge-free,
+.kiro-free {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.badge-secondary,
+.ui-badge-secondary {
+  background: var(--slate-50);
+  color: var(--text-muted);
+}
+
+/* 进度条 */
+.progress-bar-bg,
+.ui-progress {
+  height: 5px;
+  background: var(--slate-200);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar-fill,
+.ui-progress-bar {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progress-bar-fill.warning,
+.ui-progress-bar.warning {
+  background: var(--warning);
+}
+
+/* 文本样式 */
+.usage-percent.warning,
+.ui-text-warning {
+  color: var(--warning);
+}
+
+.usage-text,
+.ui-text-xs {
+  font-size: 10px;
+  margin-top: 6px;
+  font-family: monospace;
+  color: var(--text-muted);
+}
+
+.nickname-tag,
+.ui-text-sm {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nickname-tag svg {
+  color: var(--slate-400);
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  opacity: 0.5;
+}
+
+.empty-title {
+  font-size: 18px;
+  color: var(--text-main);
+  margin: 0 0 8px 0;
+  font-weight: 600;
+}
+
+.empty-text {
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 下拉菜单 */
+.ui-dropdown {
+  position: relative;
+}
+
+.ui-dropdown-menu {
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 向上展开的下拉菜单 */
+.dropdown-up .ui-dropdown-menu {
+  bottom: 100%;
+  top: auto;
+  margin-bottom: 4px;
+}
+
+.ui-dropdown-item {
+  color: var(--text-main);
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 14px;
+}
+
+.ui-dropdown-item:hover {
+  background: var(--slate-100);
+}
+
+.dropdown-group-label {
+  padding: 6px 12px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--slate-50);
+  border-top: 1px solid var(--border-color);
+}
+
+.dropdown-group-label:first-child {
+  border-top: none;
+}
