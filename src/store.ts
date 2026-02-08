@@ -138,7 +138,8 @@ class AccountStore {
       expired: 0,
       error: 0,
       refreshing: 0,
-      unknown: 0
+      unknown: 0,
+      suspended: 0
     }
 
     const byIdp: Record<string, number> = {}
