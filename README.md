@@ -12,17 +12,28 @@
 
 ## 界面预览
 
-### 账号卡片视图
-<img src="assets/screenshot-grid-view.png" alt="账号卡片视图" width="800">
-
-### 账号列表视图
-<img src="assets/screenshot-list-view.png" alt="账号列表视图" width="800">
-
-### 设置页面
-<img src="assets/screenshot-settings.png" alt="设置页面" width="800">
-
-### 暗色主题
-<img src="assets/screenshot-dark-theme.png" alt="暗色主题" width="800">
+<table>
+  <tr>
+    <td width="50%">
+      <h3 align="center">账号卡片视图</h3>
+      <img src="assets/screenshot-grid-view.png" alt="账号卡片视图">
+    </td>
+    <td width="50%">
+      <h3 align="center">账号列表视图</h3>
+      <img src="assets/screenshot-list-view.png" alt="账号列表视图">
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <h3 align="center">设置页面</h3>
+      <img src="assets/screenshot-settings.png" alt="设置页面">
+    </td>
+    <td width="50%">
+      <h3 align="center">暗色主题</h3>
+      <img src="assets/screenshot-dark-theme.png" alt="暗色主题">
+    </td>
+  </tr>
+</table>
 
 ## 功能特性
 

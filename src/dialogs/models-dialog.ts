@@ -113,24 +113,15 @@ function getModelIcon(modelId: string, modelName: string): string {
   let color = '412991' // OpenAI 紫色
   
   if (id.includes('claude') || name.includes('claude')) {
-    brand = 'anthropic'
+    brand = 'claude'
     color = 'D4A574'
-  } else if (id.includes('gpt') || id.includes('openai')) {
-    brand = 'openai'
-    color = '412991'
-  } else if (id.includes('gemini') || id.includes('google')) {
-    brand = 'google'
-    color = '4285F4'
-  } else if (id.includes('llama') || id.includes('meta')) {
-    brand = 'meta'
-    color = '0668E1'
   } else if (id.includes('mistral')) {
-    brand = 'openai' // Mistral 没有专门图标，用通用的
+    brand = 'github' // Mistral 没有专门图标，用通用的
     color = 'F2A73B'
   }
   
   // 使用 Simple Icons CDN
-  return `<img class="model-icon" src="https://cdn.simpleicons.org/${brand}/${color}" alt="${modelName}" onerror="this.src='https://cdn.simpleicons.org/openai/412991'" />`
+  return `<img class="model-icon" src="https://cdn.simpleicons.org/${brand}/${color}" alt="${modelName}" onerror="this.src='https://cdn.simpleicons.org/github/412991'" />`
 }
 
 function renderModels(models: Model[]): string {
