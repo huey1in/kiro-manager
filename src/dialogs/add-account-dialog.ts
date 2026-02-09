@@ -276,11 +276,12 @@ export function showAddAccountDialog(): void {
             subscription: {
               type: result.data.subscription_type,
               title: result.data.subscription_title,
+              rawType: result.data.raw_type,
               daysRemaining: result.data.days_remaining,
               expiresAt: result.data.expires_at,
-              managementTarget: result.data.subscription?.managementTarget,
-              upgradeCapability: result.data.subscription?.upgradeCapability,
-              overageCapability: result.data.subscription?.overageCapability
+              managementTarget: result.data.management_target,
+              upgradeCapability: result.data.upgrade_capability,
+              overageCapability: result.data.overage_capability
             },
             usage: {
               current: result.data.usage.current,
@@ -293,7 +294,7 @@ export function showAddAccountDialog(): void {
               freeTrialCurrent: result.data.usage.freeTrialCurrent,
               freeTrialExpiry: result.data.usage.freeTrialExpiry,
               bonuses: result.data.usage.bonuses,
-              nextResetDate: result.data.next_reset_date,
+              nextResetDate: result.data.usage.nextResetDate,
               resourceDetail: result.data.usage.resourceDetail
             },
             groupId: undefined,
@@ -345,7 +346,7 @@ export function showAddAccountDialog(): void {
       }
 
       submitBtn.disabled = true
-      submitText!.textContent = '导入��...'
+      submitText!.textContent = '导入中...'
       resultDiv!.style.display = 'none'
 
       let successCount = 0
@@ -404,11 +405,12 @@ export function showAddAccountDialog(): void {
               subscription: {
                 type: result.data.subscription_type,
                 title: result.data.subscription_title,
+                rawType: result.data.raw_type,
                 daysRemaining: result.data.days_remaining,
                 expiresAt: result.data.expires_at,
-                managementTarget: result.data.subscription?.managementTarget,
-                upgradeCapability: result.data.subscription?.upgradeCapability,
-                overageCapability: result.data.subscription?.overageCapability
+                managementTarget: result.data.management_target,
+                upgradeCapability: result.data.upgrade_capability,
+                overageCapability: result.data.overage_capability
               },
               usage: {
                 current: result.data.usage.current,
@@ -421,7 +423,7 @@ export function showAddAccountDialog(): void {
                 freeTrialCurrent: result.data.usage.freeTrialCurrent,
                 freeTrialExpiry: result.data.usage.freeTrialExpiry,
                 bonuses: result.data.usage.bonuses,
-                nextResetDate: result.data.next_reset_date,
+                nextResetDate: result.data.usage.nextResetDate,
                 resourceDetail: result.data.usage.resourceDetail
               },
               groupId: undefined,

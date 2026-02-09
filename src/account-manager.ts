@@ -15,20 +15,20 @@ import {
   updateCurrentAccountIfMatch,
   handleAccountAction
 } from './services/account-service'
+import { autoRefreshService } from './services/auto-refresh-service'
+import logoSvg from './assets/logo.svg'
 
 export class AccountManager {
   private container: HTMLElement
   private selectedIds: Set<string> = new Set()
   private isFilterExpanded: boolean = false
-  private viewMode: 'grid' | 'list' = 'grid'
   private unsubscribe: (() => void) | null = null
 
   constructor(container: HTMLElement) {
     this.container = container
-    this.init()
   }
 
-  private async init() {
+  async init() {
     await accountStore.loadAccounts()
     this.unsubscribe = accountStore.subscribe(() => {
       this.renderContent()
@@ -38,6 +38,13 @@ export class AccountManager {
 
     // 启动时自动导入当前活跃账号
     await this.autoImportCurrentAccount()
+
+    // 初始化并启动自动刷新服务
+    autoRefreshService.loadConfig()
+    const config = autoRefreshService.getConfig()
+    if (config.enabled) {
+      autoRefreshService.start()
+    }
   }
 
   private async checkAndUpdateCurrentAccount() {
@@ -68,9 +75,15 @@ export class AccountManager {
     if (this.unsubscribe) {
       this.unsubscribe()
     }
+    // 停止自动刷新服务
+    autoRefreshService.stop()
   }
 
   public render() {
+    const settings = accountStore.getSettings()
+    const logoSrc = settings.customLogoPath || logoSvg
+    const sidebarTitle = settings.sidebarTitle || 'Kiro Manager'
+    
     this.container.innerHTML = `
       <div class="titlebar" data-tauri-drag-region>
         <div class="titlebar-left">
@@ -92,8 +105,8 @@ export class AccountManager {
       <div class="app-body">
         <div class="sidebar">
           <div class="sidebar-header">
-            <img src="/src/assets/logo.svg" alt="Logo" class="sidebar-logo" />
-            <h1 class="sidebar-title">Kiro Manager</h1>
+            ${settings.showSidebarLogo ? `<img src="${logoSrc}" alt="Logo" class="sidebar-logo" />` : ''}
+            <h1 class="sidebar-title">${sidebarTitle}</h1>
           </div>
           <nav class="sidebar-nav">
             <button class="sidebar-link active" data-view="accounts">
@@ -145,10 +158,11 @@ export class AccountManager {
   }
 
   private renderAccountsView(container: Element) {
+    const settings = accountStore.getSettings()
     container.innerHTML = renderAccountsView(
       this.selectedIds,
       this.isFilterExpanded,
-      this.viewMode
+      settings.viewMode
     )
 
     this.attachAccountsEvents()
@@ -187,7 +201,7 @@ export class AccountManager {
   }
 
   private handleViewModeChange(mode: 'grid' | 'list') {
-    this.viewMode = mode
+    accountStore.setViewMode(mode)
     this.renderContent()
   }
 

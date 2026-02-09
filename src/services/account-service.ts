@@ -2,6 +2,7 @@ import type { Account } from '../types'
 import { accountStore } from '../store'
 import { showAccountDetailDialog } from '../dialogs/detail-dialog'
 import { showEditAccountDialog } from '../dialogs/edit-account-dialog'
+import { showModelsDialog } from '../dialogs/models-dialog'
 import { refreshAccount, deleteAccount } from '../actions/account-actions'
 
 export async function checkAndUpdateCurrentAccount(
@@ -91,6 +92,10 @@ export async function autoImportCurrentAccount(
         subscription: {
           type: result.data.subscription_type,
           title: result.data.subscription_title,
+          rawType: result.data.raw_type,
+          upgradeCapability: result.data.upgrade_capability,
+          overageCapability: result.data.overage_capability,
+          managementTarget: result.data.management_target,
           daysRemaining: result.data.days_remaining
         },
         usage: {
@@ -98,7 +103,13 @@ export async function autoImportCurrentAccount(
           limit: result.data.usage.limit,
           percentUsed: result.data.usage.current / result.data.usage.limit,
           lastUpdated: now,
-          nextResetDate: result.data.next_reset_date
+          nextResetDate: result.data.usage.nextResetDate,
+          baseLimit: result.data.usage.baseLimit,
+          baseCurrent: result.data.usage.baseCurrent,
+          freeTrialLimit: result.data.usage.freeTrialLimit,
+          freeTrialCurrent: result.data.usage.freeTrialCurrent,
+          freeTrialExpiry: result.data.usage.freeTrialExpiry,
+          resourceDetail: result.data.usage.resourceDetail
         },
         groupId: undefined,
         tags: [],
@@ -108,6 +119,9 @@ export async function autoImportCurrentAccount(
 
       const newAccount = accountStore.getAccounts().find(a => a.id === newAccountId)
       console.log('[自动导入] 成功导入当前账号:', result.data.email)
+      console.log('[自动导入] 账号数据:', newAccount)
+      console.log('[自动导入] usage.nextResetDate:', newAccount?.usage.nextResetDate)
+      console.log('[自动导入] usage.resourceDetail:', newAccount?.usage.resourceDetail)
       window.UI?.toast.success(`已自动导入当前账号: ${result.data.email}`)
       renderCurrentAccountFn(newAccount || null)
     } else {
@@ -164,6 +178,9 @@ export async function handleAccountAction(
   switch (action) {
     case 'detail':
       showAccountDetailDialog(account)
+      break
+    case 'models':
+      showModelsDialog(account)
       break
     case 'refresh':
       await refreshAccount(account, updateCurrentAccountIfMatchFn)

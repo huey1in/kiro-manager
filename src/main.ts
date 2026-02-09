@@ -5,7 +5,10 @@ import { AccountManager } from './account-manager'
 const app = document.getElementById('app')
 if (app) {
   const manager = new AccountManager(app)
-  manager.render()
+  // 先初始化加载数据，再渲染界面
+  manager.init().then(() => {
+    manager.render()
+  })
 }
 
 // 监听窗口移动事件，保存位置

@@ -35,6 +35,10 @@ export async function refreshAccount(account: Account, onUpdate?: (accountId: st
         subscription: {
           type: result.data.subscription_type,
           title: result.data.subscription_title,
+          rawType: result.data.raw_type,
+          upgradeCapability: result.data.upgrade_capability,
+          overageCapability: result.data.overage_capability,
+          managementTarget: result.data.management_target,
           daysRemaining: result.data.days_remaining
         },
         usage: {
@@ -42,7 +46,13 @@ export async function refreshAccount(account: Account, onUpdate?: (accountId: st
           limit: result.data.usage.limit,
           percentUsed: result.data.usage.current / result.data.usage.limit,
           lastUpdated: now,
-          nextResetDate: result.data.next_reset_date
+          nextResetDate: result.data.usage.nextResetDate,
+          baseLimit: result.data.usage.baseLimit,
+          baseCurrent: result.data.usage.baseCurrent,
+          freeTrialLimit: result.data.usage.freeTrialLimit,
+          freeTrialCurrent: result.data.usage.freeTrialCurrent,
+          freeTrialExpiry: result.data.usage.freeTrialExpiry,
+          resourceDetail: result.data.usage.resourceDetail
         },
         status: 'active',
         lastError: undefined,
@@ -70,6 +80,51 @@ export async function refreshAccount(account: Account, onUpdate?: (accountId: st
     }
   } catch (error) {
     window.UI?.toast.error('刷新失败: ' + (error as Error).message)
+    throw error
+  }
+}
+
+/**
+ * 只刷新 Token（不更新账户信息）
+ */
+export async function refreshTokenOnly(account: Account): Promise<void> {
+  if (!account.credentials.refreshToken || !account.credentials.clientId || !account.credentials.clientSecret) {
+    throw new Error('账号缺少刷新凭证')
+  }
+
+  try {
+    const result = await (window as any).__TAURI__.core.invoke('verify_account_credentials', {
+      refreshToken: account.credentials.refreshToken,
+      clientId: account.credentials.clientId,
+      clientSecret: account.credentials.clientSecret,
+      region: account.credentials.region || 'us-east-1'
+    })
+
+    if (result.success && result.data) {
+      const now = Date.now()
+      // 只更新 Token 相关信息
+      accountStore.updateAccount(account.id, {
+        credentials: {
+          ...account.credentials,
+          accessToken: result.data.access_token,
+          refreshToken: result.data.refresh_token,
+          expiresAt: now + (result.data.expires_in || 3600) * 1000
+        },
+        status: 'active',
+        lastError: undefined
+      })
+    } else {
+      const errorMsg = result.error || '刷新失败'
+      const isSuspended = errorMsg.includes('封禁') || errorMsg.includes('suspended')
+
+      accountStore.updateAccount(account.id, {
+        status: isSuspended ? 'suspended' : 'error',
+        lastError: errorMsg
+      })
+
+      throw new Error(errorMsg)
+    }
+  } catch (error) {
     throw error
   }
 }

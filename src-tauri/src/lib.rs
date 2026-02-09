@@ -78,13 +78,14 @@ struct AccountData {
     usage: UsageData,
     days_remaining: Option<u32>,
     expires_at: Option<u64>,
-    next_reset_date: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct UsageData {
     current: f64,
     limit: f64,
+    #[serde(rename = "nextResetDate")]
+    next_reset_date: Option<String>,
 }
 
 // AWS OIDC Token 响应
@@ -114,7 +115,9 @@ struct UsageBreakdown {
     resource_type: Option<String>,
     display_name: Option<String>,
     current_usage: Option<f64>,
+    current_usage_with_precision: Option<f64>,
     usage_limit: Option<f64>,
+    usage_limit_with_precision: Option<f64>,
     free_trial_info: Option<FreeTrialInfo>,
 }
 
@@ -125,7 +128,9 @@ struct FreeTrialInfo {
     #[serde(deserialize_with = "deserialize_timestamp_or_string")]
     free_trial_expiry: Option<String>,
     current_usage: Option<f64>,
+    current_usage_with_precision: Option<f64>,
     usage_limit: Option<f64>,
+    usage_limit_with_precision: Option<f64>,
 }
 
 // 自定义反序列化函数：支持数字或字符串
@@ -366,17 +371,26 @@ async fn verify_account_credentials(
                 
                 // 支持 CREDIT 和 AGENT_INTERACTIONS 两种类型
                 if resource_type == "CREDIT" || resource_type == "AGENT_INTERACTIONS" {
-                    // 月度使用量
-                    let monthly_current = breakdown.current_usage.unwrap_or(0.0);
-                    let monthly_limit = breakdown.usage_limit.unwrap_or(50.0);
+                    // 月度使用量（优先使用带精度的字段）
+                    let monthly_current = breakdown.current_usage_with_precision
+                        .or(breakdown.current_usage)
+                        .unwrap_or(0.0);
+                    let monthly_limit = breakdown.usage_limit_with_precision
+                        .or(breakdown.usage_limit)
+                        .unwrap_or(50.0);
                     
                     println!("[API] 资源类型匹配: {}", resource_type);
                     println!("[API] 月度使用量: {} / {}", monthly_current, monthly_limit);
                     
                     // 提取免费试用信息
                     if let Some(free_trial) = &breakdown.free_trial_info {
-                        let trial_current = free_trial.current_usage.unwrap_or(0.0);
-                        let trial_limit = free_trial.usage_limit.unwrap_or(0.0);
+                        // 优先使用带精度的字段
+                        let trial_current = free_trial.current_usage_with_precision
+                            .or(free_trial.current_usage)
+                            .unwrap_or(0.0);
+                        let trial_limit = free_trial.usage_limit_with_precision
+                            .or(free_trial.usage_limit)
+                            .unwrap_or(0.0);
                         
                         println!("[API] 找到免费试用信息");
                         println!("[API] 免费试用使用量: {} / {}", trial_current, trial_limit);
@@ -438,10 +452,10 @@ async fn verify_account_credentials(
             usage: UsageData {
                 current: current_usage,
                 limit: usage_limit,
+                next_reset_date,
             },
             days_remaining,
             expires_at: None,
-            next_reset_date,
         }),
         error: None,
     })
@@ -572,16 +586,244 @@ async fn get_local_active_account() -> Result<LocalActiveAccountResponse, String
     })
 }
 
+// 获取数据目录路径
+fn get_data_dir() -> Result<PathBuf, String> {
+    let home_dir = std::env::var("USERPROFILE")
+        .or_else(|_| std::env::var("HOME"))
+        .map_err(|_| "无法获取用户目录".to_string())?;
+    
+    let data_dir = PathBuf::from(home_dir).join("kiro manager");
+    fs::create_dir_all(&data_dir).map_err(|e| format!("创建数据目录失败: {}", e))?;
+    
+    Ok(data_dir)
+}
+
+// 保存自定义 Logo
 #[tauri::command]
-async fn load_accounts() -> Result<String, String> {
-    // 从文件加载账号数据
-    Ok("[]".to_string())
+async fn save_custom_logo(source_path: String) -> Result<String, String> {
+    let data_dir = get_data_dir()?;
+    
+    // 获取文件扩展名
+    let source = PathBuf::from(&source_path);
+    let extension = source.extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("png");
+    
+    // 目标文件路径
+    let target_path = data_dir.join(format!("custom-logo.{}", extension));
+    
+    // 复制文件
+    fs::copy(&source, &target_path)
+        .map_err(|e| format!("复制文件失败: {}", e))?;
+    
+    // 返回目标文件的绝对路径
+    target_path.to_str()
+        .ok_or_else(|| "路径转换失败".to_string())
+        .map(|s| s.to_string())
+}
+
+// 删除自定义 Logo
+#[tauri::command]
+async fn delete_custom_logo() -> Result<(), String> {
+    let data_dir = get_data_dir()?;
+    
+    // 尝试删除所有可能的扩展名
+    for ext in &["png", "jpg", "jpeg", "svg", "webp"] {
+        let logo_path = data_dir.join(format!("custom-logo.{}", ext));
+        if logo_path.exists() {
+            fs::remove_file(logo_path)
+                .map_err(|e| format!("删除文件失败: {}", e))?;
+        }
+    }
+    
+    Ok(())
 }
 
 #[tauri::command]
-async fn save_accounts(_data: String) -> Result<(), String> {
-    // 保存账号数据到文件
+async fn load_accounts() -> Result<String, String> {
+    let data_dir = get_data_dir()?;
+    let accounts_file = data_dir.join("accounts.json");
+    
+    if !accounts_file.exists() {
+        return Ok("[]".to_string());
+    }
+    
+    let data = fs::read_to_string(accounts_file)
+        .map_err(|e| format!("读取账号数据失败: {}", e))?;
+    
+    Ok(data)
+}
+
+#[tauri::command]
+async fn save_accounts(data: String) -> Result<(), String> {
+    let data_dir = get_data_dir()?;
+    let accounts_file = data_dir.join("accounts.json");
+    
+    fs::write(accounts_file, data)
+        .map_err(|e| format!("保存账号数据失败: {}", e))?;
+    
     Ok(())
+}
+
+// ============= 获取账号可用模型 =============
+
+#[derive(Debug, Serialize)]
+struct GetModelsResponse {
+    success: bool,
+    models: Vec<ModelInfo>,
+    error: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ModelInfo {
+    id: String,
+    name: String,
+    description: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    input_types: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    max_input_tokens: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    max_output_tokens: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rate_multiplier: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rate_unit: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ListModelsResponse {
+    models: Vec<KiroModel>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    next_token: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct KiroModel {
+    model_id: String,
+    model_name: String,
+    #[serde(default)]
+    description: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    supported_input_types: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    token_limits: Option<TokenLimits>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rate_multiplier: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rate_unit: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct TokenLimits {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    max_input_tokens: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    max_output_tokens: Option<i64>,
+}
+
+#[tauri::command]
+async fn get_account_models(access_token: String, region: String) -> GetModelsResponse {
+    println!("[模型列表] 开始获取模型列表");
+    println!("[模型列表] Region: {}", region);
+    
+    // 根据区域确定正确的端点
+    let base_url = if region.starts_with("eu-") {
+        "https://q.eu-central-1.amazonaws.com"
+    } else {
+        "https://q.us-east-1.amazonaws.com"
+    };
+    
+    let url = format!("{}/ListAvailableModels?origin=AI_EDITOR&maxResults=50", base_url);
+    
+    let client = reqwest::Client::new();
+    let mut all_models = Vec::new();
+    let mut seen_ids = std::collections::HashSet::new();
+    let mut next_token: Option<String> = None;
+    
+    loop {
+        let mut request_url = url.clone();
+        if let Some(token) = &next_token {
+            request_url = format!("{}&nextToken={}", request_url, token);
+        }
+        
+        println!("[模型列表] 请求 URL: {}", request_url);
+        
+        let response = match client
+            .get(&request_url)
+            .header("Authorization", format!("Bearer {}", access_token))
+            .header("Content-Type", "application/json")
+            .header("Accept", "application/json")
+            .send()
+            .await
+        {
+            Ok(resp) => resp,
+            Err(e) => {
+                println!("[模型列表] 请求失败: {}", e);
+                return GetModelsResponse {
+                    success: false,
+                    models: vec![],
+                    error: Some(format!("请求失败: {}", e)),
+                };
+            }
+        };
+        
+        if !response.status().is_success() {
+            println!("[模型列表] API 返回错误: {}", response.status());
+            return GetModelsResponse {
+                success: false,
+                models: vec![],
+                error: Some(format!("API 返回错误: {}", response.status())),
+            };
+        }
+        
+        let list_response: ListModelsResponse = match response.json().await {
+            Ok(data) => data,
+            Err(e) => {
+                println!("[模型列表] 解析响应失败: {}", e);
+                return GetModelsResponse {
+                    success: false,
+                    models: vec![],
+                    error: Some(format!("解析响应失败: {}", e)),
+                };
+            }
+        };
+        
+        println!("[模型列表] 获取到 {} 个模型", list_response.models.len());
+        
+        for model in list_response.models {
+            // 使用 HashSet 去重，避免重复添加相同的模型
+            if seen_ids.insert(model.model_id.clone()) {
+                all_models.push(ModelInfo {
+                    id: model.model_id,
+                    name: model.model_name,
+                    description: model.description,
+                    input_types: model.supported_input_types,
+                    max_input_tokens: model.token_limits.as_ref().and_then(|t| t.max_input_tokens),
+                    max_output_tokens: model.token_limits.as_ref().and_then(|t| t.max_output_tokens),
+                    rate_multiplier: model.rate_multiplier,
+                    rate_unit: model.rate_unit,
+                });
+            }
+        }
+        
+        next_token = list_response.next_token;
+        if next_token.is_none() {
+            break;
+        }
+    }
+    
+    println!("[模型列表] 总共获取到 {} 个模型（去重后）", all_models.len());
+    
+    GetModelsResponse {
+        success: true,
+        models: all_models,
+        error: None,
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -606,8 +848,11 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             verify_account_credentials,
             get_local_active_account,
+            get_account_models,
             load_accounts,
             save_accounts,
+            save_custom_logo,
+            delete_custom_logo,
             save_window_position,
             load_window_position
         ])

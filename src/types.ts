@@ -64,6 +64,7 @@ export interface AccountUsage {
 export interface AccountSubscription {
   type: SubscriptionType
   title?: string
+  rawType?: string
   expiresAt?: number
   daysRemaining?: number
   managementTarget?: string
@@ -118,5 +119,11 @@ declare global {
         }
       }
     }
+    // 全局函数
+    showAccountModels?: () => void
+    copyAccountJson?: () => void
+    closeAccountDetailModal?: () => void
+    refreshModels?: () => void
+    closeModelsModal?: () => void
   }
 }

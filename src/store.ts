@@ -1,27 +1,133 @@
 // 简化的状态管理
 import type { Account, AccountFilter, SubscriptionType, AccountStatus } from './types'
 
+// 设置配置接口
+interface Settings {
+  privacyMode: boolean // 隐私模式
+  usagePrecision: boolean // 使用量精度显示
+  showSidebarLogo: boolean // 显示侧边栏 Logo
+  customLogoPath: string // 自定义 Logo 路径
+  sidebarTitle: string // 侧边栏标题文本
+  viewMode: 'grid' | 'list' // 显示视图模式
+}
+
 class AccountStore {
   private accounts: Account[] = []
   private listeners: Set<() => void> = new Set()
   private filter: AccountFilter = {}
+  private settings: Settings = {
+    privacyMode: false,
+    usagePrecision: false,
+    showSidebarLogo: true,
+    customLogoPath: '',
+    sidebarTitle: 'Kiro Manager',
+    viewMode: 'grid'
+  }
 
   async loadAccounts() {
-    // TODO: 从 Tauri 后端加载
-    const saved = localStorage.getItem('accounts')
-    if (saved) {
-      this.accounts = JSON.parse(saved)
-      this.notify()
+    try {
+      // 从 Tauri 后端加载
+      const data = await (window as any).__TAURI__.core.invoke('load_accounts')
+      if (data) {
+        this.accounts = JSON.parse(data)
+        this.notify()
+      }
+    } catch (error) {
+      console.error('[Store] 加载账号失败:', error)
+      // 降级到 localStorage
+      const saved = localStorage.getItem('accounts')
+      if (saved) {
+        this.accounts = JSON.parse(saved)
+        this.notify()
+      }
+    }
+    
+    // 加载设置
+    const savedSettings = localStorage.getItem('settings')
+    if (savedSettings) {
+      this.settings = { ...this.settings, ...JSON.parse(savedSettings) }
     }
   }
 
   async saveAccounts() {
-    // TODO: 保存到 Tauri 后端
-    localStorage.setItem('accounts', JSON.stringify(this.accounts))
+    try {
+      // 保存到 Tauri 后端
+      await (window as any).__TAURI__.core.invoke('save_accounts', {
+        data: JSON.stringify(this.accounts)
+      })
+    } catch (error) {
+      console.error('[Store] 保存账号失败:', error)
+      // 降级到 localStorage
+      localStorage.setItem('accounts', JSON.stringify(this.accounts))
+    }
+  }
+  
+  private saveSettings() {
+    localStorage.setItem('settings', JSON.stringify(this.settings))
   }
 
   getAccounts(): Account[] {
     return this.accounts
+  }
+  
+  // 设置相关方法
+  getSettings(): Settings {
+    return { ...this.settings }
+  }
+  
+  setPrivacyMode(enabled: boolean) {
+    this.settings.privacyMode = enabled
+    this.saveSettings()
+    this.notify()
+  }
+  
+  setUsagePrecision(enabled: boolean) {
+    this.settings.usagePrecision = enabled
+    this.saveSettings()
+    this.notify()
+  }
+  
+  setShowSidebarLogo(enabled: boolean) {
+    this.settings.showSidebarLogo = enabled
+    this.saveSettings()
+    this.notify()
+  }
+  
+  setCustomLogoPath(path: string) {
+    this.settings.customLogoPath = path
+    this.saveSettings()
+    this.notify()
+  }
+  
+  setSidebarTitle(title: string) {
+    this.settings.sidebarTitle = title
+    this.saveSettings()
+    this.notify()
+  }
+  
+  setViewMode(mode: 'grid' | 'list') {
+    this.settings.viewMode = mode
+    this.saveSettings()
+    this.notify()
+  }
+  
+  // 隐藏邮箱
+  maskEmail(email: string): string {
+    if (!this.settings.privacyMode || !email) return email
+    
+    // 生成固定的伪装邮箱
+    const hash = email.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    const fakeEmail = `user${hash % 10000}@example.com`
+    return fakeEmail
+  }
+  
+  // 隐藏昵称
+  maskNickname(nickname: string | undefined): string {
+    if (!this.settings.privacyMode || !nickname) return nickname || ''
+    
+    // 生成固定的伪装昵称
+    const hash = nickname.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    return `User${hash % 10000}`
   }
 
   addAccount(account: Omit<Account, 'id' | 'createdAt' | 'isActive'>) {

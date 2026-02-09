@@ -111,6 +111,32 @@
   margin-right: 5px;
 }
 
+/* 不同状态的颜色 */
+.account-card[data-status="suspended"] .status-dot::before,
+.account-list-item[data-status="suspended"] .status-dot::before {
+  background: #ef4444;
+}
+
+.account-card[data-status="expired"] .status-dot::before,
+.account-list-item[data-status="expired"] .status-dot::before {
+  background: #f59e0b;
+}
+
+.account-card[data-status="error"] .status-dot::before,
+.account-list-item[data-status="error"] .status-dot::before {
+  background: #f59e0b;
+}
+
+.account-card[data-status="refreshing"] .status-dot::before,
+.account-list-item[data-status="refreshing"] .status-dot::before {
+  background: #3b82f6;
+}
+
+.account-card[data-status="unknown"] .status-dot::before,
+.account-list-item[data-status="unknown"] .status-dot::before {
+  background: #9ca3af;
+}
+
 /* 使用量区域 */
 .usage-box,
 .account-usage {
@@ -151,4 +177,36 @@
   padding-top: 10px;
   border-top: 1px solid #f8fafc;
   margin-top: auto;
+}
+
+/* 底部信息栏 */
+.card-footer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 0;
+  margin-top: auto;
+  border-top: 1px solid var(--border-color);
+}
+
+.footer-info-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.footer-info-item svg {
+  flex-shrink: 0;
+}
+
+.footer-info-item.warning {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.footer-info-item.danger {
+  color: #ef4444;
+  font-weight: 600;
 }

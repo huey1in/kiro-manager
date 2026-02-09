@@ -39,6 +39,30 @@ export function getIdpDisplayName(idp: string): string {
 }
 
 /**
+ * 格式化 Token 到期时间
+ */
+export function formatTokenExpiry(expiresAt: number): string {
+  const now = Date.now()
+  const diff = expiresAt - now
+  
+  if (diff <= 0) return '已过期'
+  
+  const minutes = Math.floor(diff / (60 * 1000))
+  const hours = Math.floor(diff / (60 * 60 * 1000))
+  
+  if (minutes < 60) {
+    return `${minutes}分钟`
+  } else if (hours < 24) {
+    const remainingMinutes = minutes % 60
+    return remainingMinutes > 0 ? `${hours}小时${remainingMinutes}分` : `${hours}小时`
+  } else {
+    const days = Math.floor(hours / 24)
+    const remainingHours = hours % 24
+    return remainingHours > 0 ? `${days}天${remainingHours}小时` : `${days}天`
+  }
+}
+
+/**
  * 生成导出内容
  */
 export function generateExportContent(

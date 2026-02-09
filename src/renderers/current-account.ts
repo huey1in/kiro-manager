@@ -1,4 +1,5 @@
 import type { Account } from '../types'
+import { accountStore } from '../store'
 
 export function renderCurrentAccount(container: Element, account?: Account | null) {
   const card = container.querySelector('#current-account-card')
@@ -24,17 +25,28 @@ export function renderCurrentAccount(container: Element, account?: Account | nul
   }
 
   // 显示当前账号信息
+  const settings = accountStore.getSettings()
+  const displayEmail = accountStore.maskEmail(account.email)
   const isHighUsage = account.usage.percentUsed > 0.8
+  
+  // 格式化使用量
+  const formatUsage = (value: number): string => {
+    if (settings.usagePrecision) {
+      return value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+    }
+    return Math.floor(value).toLocaleString()
+  }
+  
   card.innerHTML = `
     <div class="current-account-header">
       <div class="current-account-label">当前账号</div>
       <span class="current-account-badge">${account.subscription.title || account.subscription.type}</span>
     </div>
-    <div class="current-account-email" title="${account.email}">${account.email}</div>
+    <div class="current-account-email" title="${displayEmail}">${displayEmail}</div>
     <div class="current-account-usage">
       <div class="current-account-usage-text">
-        <span>${account.usage.current.toLocaleString()}</span>
-        <span class="current-account-usage-limit">/ ${account.usage.limit.toLocaleString()}</span>
+        <span>${formatUsage(account.usage.current)}</span>
+        <span class="current-account-usage-limit">/ ${formatUsage(account.usage.limit)}</span>
       </div>
       <div class="current-account-progress">
         <div class="current-account-progress-bar ${isHighUsage ? 'warning' : ''}" style="width: ${account.usage.percentUsed * 100}%"></div>

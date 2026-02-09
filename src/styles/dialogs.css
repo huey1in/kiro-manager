@@ -9,11 +9,72 @@
   margin-bottom: 1rem;
 }
 
+.detail-email-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
 .detail-email {
   font-size: 1.35rem;
   font-weight: 700;
   color: var(--text-main);
-  margin-bottom: 8px;
+  flex: 1;
+  min-width: 0;
+  word-break: break-all;
+}
+
+.account-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--slate-50);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.account-status-indicator .status-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.account-status-indicator .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.account-status-indicator .status-dot::before {
+  content: none;
+}
+
+.account-status-indicator .status-dot.status-active {
+  background: #10b981;
+}
+
+.account-status-indicator .status-dot.status-expired {
+  background: #ef4444;
+}
+
+.account-status-indicator .status-dot.status-error {
+  background: #f59e0b;
+}
+
+.account-status-indicator .status-dot.status-refreshing {
+  background: #3b82f6;
+}
+
+.account-status-indicator .status-dot.status-suspended {
+  background: #6b7280;
+}
+
+.account-status-indicator .status-dot.status-unknown {
+  background: #9ca3af;
 }
 
 .detail-header-bottom {
@@ -46,6 +107,40 @@
   border-radius: 10px;
   padding: 1rem;
   margin-bottom: 1rem;
+}
+
+.detail-suspended-warning {
+  background: #fef2f2;
+  border: 2px solid #ef4444;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.detail-suspended-warning svg {
+  color: #ef4444;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.suspended-text {
+  flex: 1;
+}
+
+.suspended-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #dc2626;
+  margin-bottom: 4px;
+}
+
+.suspended-desc {
+  font-size: 13px;
+  color: #991b1b;
+  line-height: 1.4;
 }
 
 .detail-usage-info {
