@@ -839,8 +839,17 @@ pub fn run() {
             tauri::async_runtime::spawn(async move {
                 // 先恢复位置
                 if let Ok(Some(position)) = load_window_position().await {
-                    let _ = window.set_position(PhysicalPosition::new(position.x, position.y));
-                    println!("[窗口] 恢复位置: ({}, {})", position.x, position.y);
+                    // 检查位置是否有效（避免窗口在屏幕外或最小化位置）
+                    if position.x > -32000 && position.y > -32000 && position.x < 10000 && position.y < 10000 {
+                        let _ = window.set_position(PhysicalPosition::new(position.x, position.y));
+                        println!("[窗口] 恢复位置: ({}, {})", position.x, position.y);
+                    } else {
+                        println!("[窗口] 位置无效，使用默认居中位置");
+                        let _ = window.center();
+                    }
+                } else {
+                    // 首次启动，居中显示
+                    let _ = window.center();
                 }
                 
                 // 等待一小段时间确保内容加载
