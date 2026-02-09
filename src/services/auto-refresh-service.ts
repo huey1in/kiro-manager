@@ -199,16 +199,18 @@ class AutoRefreshService {
         continue
       }
 
-      // 检查 Token 是否即将过期
+      // 检查 Token 是否即将过期或已过期
       if (account.credentials.expiresAt) {
         const timeLeft = account.credentials.expiresAt - now
         const timeLeftMinutes = Math.floor(timeLeft / 60000)
         const timeLeftSeconds = Math.floor((timeLeft % 60000) / 1000)
 
-        if (timeLeft < threshold && timeLeft > 0) {
+        // 刷新即将过期（10分钟内）或已过期的 Token
+        if (timeLeft < threshold) {
           const refreshMode = this.config.syncInfo ? '完整刷新' : '仅刷新 Token'
+          const status = timeLeft <= 0 ? '已过期' : `剩余 ${timeLeftMinutes} 分 ${timeLeftSeconds} 秒`
           console.log(`[自动刷新] 账号 ${account.email}`)
-          console.log(`[自动刷新]   Token 剩余时间: ${timeLeftMinutes} 分 ${timeLeftSeconds} 秒`)
+          console.log(`[自动刷新]   Token 状态: ${status}`)
           console.log(`[自动刷新]   刷新模式: ${refreshMode}`)
           
           // 记录刷新前的数据（用于对比）
@@ -249,12 +251,9 @@ class AutoRefreshService {
 
           // 添加延迟避免请求过快
           await new Promise(resolve => setTimeout(resolve, 1000))
-        } else if (timeLeft > 0) {
+        } else {
           console.log(`[自动刷新] 账号 ${account.email} Token 正常 (剩余 ${timeLeftMinutes} 分 ${timeLeftSeconds} 秒)`)
           normalCount++
-        } else {
-          console.log(`[自动刷新] 账号 ${account.email} Token 已过期`)
-          skipCount++
         }
       } else {
         console.log(`[自动刷新] 账号 ${account.email} 无 Token 过期时间`)
