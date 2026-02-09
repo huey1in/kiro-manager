@@ -32,8 +32,7 @@
         height: 16px;
         width: 100px;
         border-radius: 4px;
-        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-        background-size: 200% 100%;
+        background: var(--border-color, #e5e7eb);
         animation: skeleton-loading 1.5s ease-in-out infinite;
       }
       
@@ -46,8 +45,7 @@
         width: 32px;
         height: 20px;
         border-radius: 4px;
-        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-        background-size: 200% 100%;
+        background: var(--border-color, #e5e7eb);
         animation: skeleton-loading 1.5s ease-in-out infinite;
       }
       
@@ -77,8 +75,7 @@
         width: 28px;
         height: 28px;
         border-radius: 6px;
-        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-        background-size: 200% 100%;
+        background: var(--border-color, #e5e7eb);
         animation: skeleton-loading 1.5s ease-in-out infinite;
       }
       
@@ -86,8 +83,7 @@
         flex: 1;
         height: 20px;
         border-radius: 4px;
-        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-        background-size: 200% 100%;
+        background: var(--border-color, #e5e7eb);
         animation: skeleton-loading 1.5s ease-in-out infinite;
       }
       
@@ -101,16 +97,14 @@
       .skeleton-nav-item {
         height: 40px;
         border-radius: 8px;
-        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-        background-size: 200% 100%;
+        background: var(--border-color, #e5e7eb);
         animation: skeleton-loading 1.5s ease-in-out infinite;
       }
       
       .skeleton-footer {
         height: 100px;
         border-radius: 8px;
-        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-        background-size: 200% 100%;
+        background: var(--border-color, #e5e7eb);
         animation: skeleton-loading 1.5s ease-in-out infinite;
       }
       
@@ -133,8 +127,7 @@
         flex: 1;
         height: 48px;
         border-radius: 8px;
-        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-        background-size: 200% 100%;
+        background: var(--border-color, #e5e7eb);
         animation: skeleton-loading 1.5s ease-in-out infinite;
       }
       
@@ -142,8 +135,7 @@
         width: 80px;
         height: 48px;
         border-radius: 8px;
-        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-        background-size: 200% 100%;
+        background: var(--border-color, #e5e7eb);
         animation: skeleton-loading 1.5s ease-in-out infinite;
       }
       
@@ -159,8 +151,7 @@
         width: 20px;
         height: 20px;
         border-radius: 4px;
-        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-        background-size: 200% 100%;
+        background: var(--border-color, #e5e7eb);
         animation: skeleton-loading 1.5s ease-in-out infinite;
       }
       
@@ -168,8 +159,7 @@
         width: 60px;
         height: 36px;
         border-radius: 6px;
-        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-        background-size: 200% 100%;
+        background: var(--border-color, #e5e7eb);
         animation: skeleton-loading 1.5s ease-in-out infinite;
       }
       
@@ -183,8 +173,7 @@
         width: 36px;
         height: 36px;
         border-radius: 6px;
-        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-        background-size: 200% 100%;
+        background: var(--border-color, #e5e7eb);
         animation: skeleton-loading 1.5s ease-in-out infinite;
       }
       
@@ -197,49 +186,45 @@
       .skeleton-card {
         height: 180px;
         border-radius: 12px;
-        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-        background-size: 200% 100%;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
         animation: skeleton-loading 1.5s ease-in-out infinite;
       }
       
       @keyframes skeleton-loading {
         0% {
-          background-position: 200% 0;
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
         }
         100% {
-          background-position: -200% 0;
+          opacity: 1;
         }
       }
       
       /* 深色模式 */
-      [data-theme="dark"] #app-skeleton {
-        background: var(--bg-main, #1a1a1a);
+      html.dark #app-skeleton {
+        background: #0f172a;
       }
       
-      [data-theme="dark"] .skeleton-titlebar {
-        background: var(--bg-main, #1a1a1a);
-        border-bottom-color: var(--border-color, #3a3a3a);
+      html.dark .skeleton-titlebar {
+        background: #0f172a;
+        border-bottom-color: #334155;
       }
       
-      [data-theme="dark"] .skeleton-sidebar {
-        background: var(--bg-sidebar, #2a2a2a);
-        border-right-color: var(--border-color, #3a3a3a);
+      html.dark .skeleton-sidebar {
+        background: #1e293b;
+        border-right-color: #334155;
       }
       
-      [data-theme="dark"] .skeleton-titlebar-left,
-      [data-theme="dark"] .skeleton-titlebar-btn,
-      [data-theme="dark"] .skeleton-logo,
-      [data-theme="dark"] .skeleton-title,
-      [data-theme="dark"] .skeleton-nav-item,
-      [data-theme="dark"] .skeleton-footer,
-      [data-theme="dark"] .skeleton-search,
-      [data-theme="dark"] .skeleton-btn,
-      [data-theme="dark"] .skeleton-checkbox,
-      [data-theme="dark"] .skeleton-action-btn,
-      [data-theme="dark"] .skeleton-view-btn,
-      [data-theme="dark"] .skeleton-card {
-        background: linear-gradient(90deg, #2a2a2a 25%, #353535 50%, #2a2a2a 75%);
-        background-size: 200% 100%;
+      html.dark .skeleton-main {
+        background: #0f172a;
+      }
+      
+      html.dark .skeleton-card {
+        background: #1e293b;
+        border-color: #334155;
       }
     </style>
   </head>
@@ -299,10 +284,10 @@
     <script>
       (function() {
         try {
-          // 检测主题
-          const theme = localStorage.getItem('theme') || 'light';
+          // 检测主题 - 1in-ui 使用 'ui-theme' 键，并在 html 元素上添加 dark 类
+          const theme = localStorage.getItem('ui-theme') || localStorage.getItem('theme') || 'light';
           if (theme === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.classList.add('dark');
           }
           
           // 调整视图模式
