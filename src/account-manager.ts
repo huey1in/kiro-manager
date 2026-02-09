@@ -214,10 +214,11 @@ export class AccountManager {
   }
 
   private updateAccountList() {
+    const settings = accountStore.getSettings()
     updateAccountList(
       this.container,
       this.selectedIds,
-      this.viewMode,
+      settings.viewMode,
       () => this.attachAccountCardEvents()
     )
   }
