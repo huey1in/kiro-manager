@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "kiro-manager",
-  "version": "0.1.0",
-  "identifier": "com.tauri-app.kiro-manager",
+  "productName": "Kiro Manager",
+  "version": "1.0.1",
+  "identifier": "com.kiro.manager",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",

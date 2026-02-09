@@ -7,10 +7,316 @@
     <title>账号管理器</title>
     <link rel="stylesheet" href="https://unpkg.com/1inui/dist/1in-ui.min.css">
     <link rel="stylesheet" href="/src/styles.css" />
+    <style>
+      /* 骨架屏样式 */
+      #app-skeleton {
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-main, #ffffff);
+        overflow: hidden;
+      }
+      
+      .skeleton-titlebar {
+        height: 32px;
+        background: var(--bg-main, #ffffff);
+        border-bottom: 1px solid var(--border-color, #e5e7eb);
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        justify-content: space-between;
+      }
+      
+      .skeleton-titlebar-left {
+        height: 16px;
+        width: 100px;
+        border-radius: 4px;
+        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s ease-in-out infinite;
+      }
+      
+      .skeleton-titlebar-right {
+        display: flex;
+        gap: 8px;
+      }
+      
+      .skeleton-titlebar-btn {
+        width: 32px;
+        height: 20px;
+        border-radius: 4px;
+        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s ease-in-out infinite;
+      }
+      
+      .skeleton-body {
+        flex: 1;
+        display: flex;
+        overflow: hidden;
+      }
+      
+      .skeleton-sidebar {
+        width: 200px;
+        background: var(--bg-sidebar, #f8f9fa);
+        border-right: 1px solid var(--border-color, #e5e7eb);
+        display: flex;
+        flex-direction: column;
+        padding: 16px;
+      }
+      
+      .skeleton-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+      
+      .skeleton-logo {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s ease-in-out infinite;
+      }
+      
+      .skeleton-title {
+        flex: 1;
+        height: 20px;
+        border-radius: 4px;
+        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s ease-in-out infinite;
+      }
+      
+      .skeleton-nav {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      
+      .skeleton-nav-item {
+        height: 40px;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s ease-in-out infinite;
+      }
+      
+      .skeleton-footer {
+        height: 100px;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s ease-in-out infinite;
+      }
+      
+      .skeleton-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 24px;
+      }
+      
+      .skeleton-toolbar {
+        height: 48px;
+        margin-bottom: 24px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      
+      .skeleton-search {
+        flex: 1;
+        height: 48px;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s ease-in-out infinite;
+      }
+      
+      .skeleton-btn {
+        width: 80px;
+        height: 48px;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s ease-in-out infinite;
+      }
+      
+      .skeleton-actions {
+        height: 48px;
+        margin-bottom: 16px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      
+      .skeleton-checkbox {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s ease-in-out infinite;
+      }
+      
+      .skeleton-action-btn {
+        width: 60px;
+        height: 36px;
+        border-radius: 6px;
+        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s ease-in-out infinite;
+      }
+      
+      .skeleton-view-btns {
+        margin-left: auto;
+        display: flex;
+        gap: 8px;
+      }
+      
+      .skeleton-view-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s ease-in-out infinite;
+      }
+      
+      .skeleton-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+      
+      .skeleton-card {
+        height: 180px;
+        border-radius: 12px;
+        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s ease-in-out infinite;
+      }
+      
+      @keyframes skeleton-loading {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+      
+      /* 深色模式 */
+      [data-theme="dark"] #app-skeleton {
+        background: var(--bg-main, #1a1a1a);
+      }
+      
+      [data-theme="dark"] .skeleton-titlebar {
+        background: var(--bg-main, #1a1a1a);
+        border-bottom-color: var(--border-color, #3a3a3a);
+      }
+      
+      [data-theme="dark"] .skeleton-sidebar {
+        background: var(--bg-sidebar, #2a2a2a);
+        border-right-color: var(--border-color, #3a3a3a);
+      }
+      
+      [data-theme="dark"] .skeleton-titlebar-left,
+      [data-theme="dark"] .skeleton-titlebar-btn,
+      [data-theme="dark"] .skeleton-logo,
+      [data-theme="dark"] .skeleton-title,
+      [data-theme="dark"] .skeleton-nav-item,
+      [data-theme="dark"] .skeleton-footer,
+      [data-theme="dark"] .skeleton-search,
+      [data-theme="dark"] .skeleton-btn,
+      [data-theme="dark"] .skeleton-checkbox,
+      [data-theme="dark"] .skeleton-action-btn,
+      [data-theme="dark"] .skeleton-view-btn,
+      [data-theme="dark"] .skeleton-card {
+        background: linear-gradient(90deg, #3a3a3a 25%, #4a4a4a 50%, #3a3a3a 75%);
+        background-size: 200% 100%;
+      }
+    </style>
   </head>
 
   <body class="ui-base">
-    <div id="app"></div>
+    <div id="app">
+      <!-- 骨架屏 -->
+      <div id="app-skeleton">
+        <div class="skeleton-titlebar">
+          <div class="skeleton-titlebar-left"></div>
+          <div class="skeleton-titlebar-right">
+            <div class="skeleton-titlebar-btn"></div>
+            <div class="skeleton-titlebar-btn"></div>
+          </div>
+        </div>
+        <div class="skeleton-body">
+          <div class="skeleton-sidebar">
+            <div class="skeleton-header">
+              <div class="skeleton-logo"></div>
+              <div class="skeleton-title"></div>
+            </div>
+            <div class="skeleton-nav">
+              <div class="skeleton-nav-item"></div>
+              <div class="skeleton-nav-item"></div>
+            </div>
+            <div class="skeleton-footer"></div>
+          </div>
+          <div class="skeleton-main">
+            <div class="skeleton-toolbar">
+              <div class="skeleton-search"></div>
+              <div class="skeleton-btn"></div>
+              <div class="skeleton-btn"></div>
+              <div class="skeleton-btn"></div>
+            </div>
+            <div class="skeleton-actions">
+              <div class="skeleton-checkbox"></div>
+              <div class="skeleton-action-btn"></div>
+              <div class="skeleton-action-btn"></div>
+              <div class="skeleton-action-btn"></div>
+              <div class="skeleton-view-btns">
+                <div class="skeleton-view-btn"></div>
+                <div class="skeleton-view-btn"></div>
+              </div>
+            </div>
+            <div class="skeleton-grid" id="skeleton-grid">
+              <div class="skeleton-card"></div>
+              <div class="skeleton-card"></div>
+              <div class="skeleton-card"></div>
+              <div class="skeleton-card"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 根据 localStorage 调整骨架屏 -->
+    <script>
+      (function() {
+        try {
+          const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+          const viewMode = settings.viewMode || 'grid';
+          const skeletonGrid = document.getElementById('skeleton-grid');
+          
+          if (viewMode === 'list' && skeletonGrid) {
+            skeletonGrid.style.gridTemplateColumns = '1fr';
+            skeletonGrid.style.gap = '12px';
+            const cards = skeletonGrid.querySelectorAll('.skeleton-card');
+            cards.forEach(card => {
+              card.style.height = '72px';
+            });
+          }
+        } catch (e) {
+          console.error('加载骨架屏设置失败:', e);
+        }
+      })();
+    </script>
+    
     <script src="https://unpkg.com/1inui/dist/1in-ui.min.js" defer></script>
     <script type="module" src="/src/main.ts"></script>
   </body>
