@@ -3,6 +3,12 @@
 <div align="center">
   <img src="src/assets/logo.svg" alt="Kiro Manager Logo" width="120" height="120">
   <p>一个现代化的 Kiro 账号管理工具</p>
+  
+  [![GitHub Stars](https://img.shields.io/github/stars/huey1in/kiro-manager?style=flat-square&logo=github)](https://github.com/huey1in/kiro-manager)
+  [![GitHub Forks](https://img.shields.io/github/forks/huey1in/kiro-manager?style=flat-square&logo=github)](https://github.com/huey1in/kiro-manager)
+  [![GitHub Release](https://img.shields.io/github/v/release/huey1in/kiro-manager?style=flat-square&logo=github)](https://github.com/huey1in/kiro-manager/releases)
+  [![Repo Views](https://komarev.com/ghpvc/?username=huey1in&repo=kiro-manager&style=flat-square&color=orange&label=Clone+%26+Views)](https://github.com/huey1in/kiro-manager)
+  [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 </div>
 
 ## 功能特性
@@ -13,7 +19,6 @@
 - 实时显示账号状态（正常、已封禁、已过期等）
 - 查看账号可用模型列表
 - 账号使用量和订阅信息展示
-- 支持账号分组和标签管理
 
 ### 数据安全
 - 本地存储，数据保存在用户目录
@@ -25,12 +30,6 @@
 - 账号信息自动同步
 - 可配置的检查间隔
 
-### 界面定制
-- 深色/浅色主题切换
-- 自定义侧边栏 Logo
-- 自定义侧边栏标题
-- 网格/列表视图切换
-
 ## 下载安装
 
 前往 [Releases](https://github.com/huey1in/kiro-manager/releases) 页面下载最新版本的安装包。
@@ -40,13 +39,6 @@
 
 ## 使用说明
 
-### 首次使用
-
-1. 启动应用后，点击"添加账号"按钮
-2. 选择导入方式：
-   - **单个导入**：手动输入账号凭证
-   - **批量导入**：从 Kiro IDE 自动读取当前活跃账号
-
 ### 账号凭证
 
 账号凭证包括：
@@ -55,7 +47,6 @@
 - Client Secret
 - Region（区域）
 
-这些信息可以从 Kiro IDE 的本地缓存中自动读取。
 
 ### 查看账号信息
 
@@ -72,14 +63,6 @@
 - 设置检查间隔（30秒 - 30分钟）
 - 是否同步账户信息
 
-## 数据存储
-
-应用数据保存在：
-```
-C:\Users\<用户名>\kiro manager\
-├── accounts.json          # 账号数据
-└── custom-logo.png        # 自定义 Logo（如果设置）
-```
 
 ## 技术栈
 
@@ -114,15 +97,6 @@ npm run tauri dev
 npm run tauri build
 ```
 
-### 生成图标
-
-```bash
-# 生成所有尺寸的 PNG 图标
-node scripts/svg-to-png.mjs
-
-# 生成 ICO 文件
-node scripts/generate-ico.mjs
-```
 
 ## 许可证
 
