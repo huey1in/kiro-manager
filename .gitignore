@@ -35,6 +35,9 @@ src-tauri/WixTools
 *.sln
 *.sw?
 
+# Claude AI
+.claude/
+
 # Kiro settings
 .kiro/
 
