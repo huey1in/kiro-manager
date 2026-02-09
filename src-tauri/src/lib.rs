@@ -839,8 +839,31 @@ pub fn run() {
             tauri::async_runtime::spawn(async move {
                 // 先恢复位置
                 if let Ok(Some(position)) = load_window_position().await {
-                    let _ = window.set_position(PhysicalPosition::new(position.x, position.y));
-                    println!("[窗口] 恢复位置: ({}, {})", position.x, position.y);
+                    // 获取窗口尺寸
+                    let window_size = window.outer_size().unwrap_or(tauri::PhysicalSize::new(800, 600));
+                    
+                    // 获取主显示器信息
+                    if let Some(monitor) = window.current_monitor().ok().flatten() {
+                        let monitor_size = monitor.size();
+                        let monitor_pos = monitor.position();
+                        
+                        // 计算有效的窗口位置，确保窗口至少有一部分在屏幕内
+                        let min_visible = 100; // 至少保留 100 像素可见
+                        let max_x = (monitor_pos.x + monitor_size.width as i32) - min_visible;
+                        let max_y = (monitor_pos.y + monitor_size.height as i32) - min_visible;
+                        let min_x = monitor_pos.x - (window_size.width as i32) + min_visible;
+                        let min_y = monitor_pos.y - (window_size.height as i32) + min_visible;
+                        
+                        let safe_x = position.x.clamp(min_x, max_x);
+                        let safe_y = position.y.clamp(min_y, max_y);
+                        
+                        let _ = window.set_position(PhysicalPosition::new(safe_x, safe_y));
+                        println!("[窗口] 恢复位置: ({}, {}) -> 安全位置: ({}, {})", position.x, position.y, safe_x, safe_y);
+                    } else {
+                        // 如果无法获取显示器信息，使用原始位置
+                        let _ = window.set_position(PhysicalPosition::new(position.x, position.y));
+                        println!("[窗口] 恢复位置: ({}, {})", position.x, position.y);
+                    }
                 }
                 
                 // 等待一小段时间确保内容加载
