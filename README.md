@@ -96,6 +96,10 @@ MIT License
 
 欢迎提交 Issue 和 Pull Request！
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=huey1in/kiro-manager&type=Date)](https://star-history.com/#huey1in/kiro-manager&Date)
+
 ## 免责声明
 
 本工具仅供学习和个人使用，请遵守 Kiro 服务条款。
