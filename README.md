@@ -10,6 +10,20 @@
   [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 </div>
 
+## 界面预览
+
+### 账号卡片视图
+<img src="assets/screenshot-grid-view.png" alt="账号卡片视图" width="800">
+
+### 账号列表视图
+<img src="assets/screenshot-list-view.png" alt="账号列表视图" width="800">
+
+### 设置页面
+<img src="assets/screenshot-settings.png" alt="设置页面" width="800">
+
+### 暗色主题
+<img src="assets/screenshot-dark-theme.png" alt="暗色主题" width="800">
+
 ## 功能特性
 
 ### 账号管理
@@ -19,11 +33,6 @@
 - 查看账号可用模型列表
 - 账号使用量和订阅信息展示
 
-### 数据安全
-- 本地存储，数据保存在用户目录
-- 支持隐私模式，隐藏敏感信息
-- 支持导出账号数据
-
 ### 自动化功能
 - Token 自动刷新
 - 账号信息自动同步
@@ -32,35 +41,6 @@
 ## 下载安装
 
 前往 [Releases](https://github.com/huey1in/kiro-manager/releases) 页面下载最新版本的安装包。
-
-### Windows
-下载 `.msi` 或 `.exe` 安装包，双击运行即可安装。
-
-## 使用说明
-
-### 账号凭证
-
-账号凭证包括：
-- Refresh Token
-- Client ID
-- Client Secret
-- Region（区域）
-
-
-### 查看账号信息
-
-点击账号卡片可以查看详细信息：
-- 用户邮箱和 ID
-- 订阅类型和到期时间
-- 使用量统计
-- 可用模型列表
-
-### 自动刷新设置
-
-在"设置"页面可以配置：
-- 启用/禁用自动刷新
-- 设置检查间隔（30秒 - 30分钟）
-- 是否同步账户信息
 
 
 ## 技术栈

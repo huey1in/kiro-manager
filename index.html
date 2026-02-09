@@ -238,7 +238,7 @@
       [data-theme="dark"] .skeleton-action-btn,
       [data-theme="dark"] .skeleton-view-btn,
       [data-theme="dark"] .skeleton-card {
-        background: linear-gradient(90deg, #3a3a3a 25%, #4a4a4a 50%, #3a3a3a 75%);
+        background: linear-gradient(90deg, #2a2a2a 25%, #353535 50%, #2a2a2a 75%);
         background-size: 200% 100%;
       }
     </style>
@@ -299,6 +299,13 @@
     <script>
       (function() {
         try {
+          // 检测主题
+          const theme = localStorage.getItem('theme') || 'light';
+          if (theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+          }
+          
+          // 调整视图模式
           const settings = JSON.parse(localStorage.getItem('settings') || '{}');
           const viewMode = settings.viewMode || 'grid';
           const skeletonGrid = document.getElementById('skeleton-grid');
