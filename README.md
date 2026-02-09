@@ -7,7 +7,6 @@
   [![GitHub Stars](https://img.shields.io/github/stars/huey1in/kiro-manager?style=flat-square&logo=github)](https://github.com/huey1in/kiro-manager)
   [![GitHub Forks](https://img.shields.io/github/forks/huey1in/kiro-manager?style=flat-square&logo=github)](https://github.com/huey1in/kiro-manager)
   [![GitHub Release](https://img.shields.io/github/v/release/huey1in/kiro-manager?style=flat-square&logo=github)](https://github.com/huey1in/kiro-manager/releases)
-  [![Repo Views](https://komarev.com/ghpvc/?username=huey1in&repo=kiro-manager&style=flat-square&color=orange&label=Clone+%26+Views)](https://github.com/huey1in/kiro-manager)
   [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 </div>
 
