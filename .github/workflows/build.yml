@@ -1,0 +1,69 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: '是否创建 Release'
+        required: true
+        type: boolean
+        default: false
+      release_tag:
+        description: 'Release 标签 (例如: v1.0.0)'
+        required: false
+        type: string
+
+jobs:
+  build:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest]
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the app (with release)
+        if: ${{ inputs.create_release }}
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ inputs.release_tag }}
+          releaseName: 'Kiro Manager ${{ inputs.release_tag }}'
+          releaseBody: '查看更新日志了解此版本的更改。'
+          releaseDraft: false
+          prerelease: false
+
+      - name: Build the app (without release)
+        if: ${{ !inputs.create_release }}
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        if: ${{ !inputs.create_release }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: kiro-manager-${{ matrix.platform }}
+          path: src-tauri/target/release/bundle/**/*
