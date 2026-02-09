@@ -22,7 +22,8 @@
         "maxHeight": 600,
         "resizable": false,
         "fullscreen": false,
-        "center": true,
+        "center": false,
+        "visible": false,
         "decorations": false
       }
     ],

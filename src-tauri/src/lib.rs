@@ -837,10 +837,18 @@ pub fn run() {
             
             // 恢复窗口位置
             tauri::async_runtime::spawn(async move {
+                // 先恢复位置
                 if let Ok(Some(position)) = load_window_position().await {
                     let _ = window.set_position(PhysicalPosition::new(position.x, position.y));
                     println!("[窗口] 恢复位置: ({}, {})", position.x, position.y);
                 }
+                
+                // 等待一小段时间确保内容加载
+                tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+                
+                // 显示窗口
+                let _ = window.show();
+                println!("[窗口] 窗口已显示");
             });
             
             Ok(())

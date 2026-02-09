@@ -137,7 +137,8 @@ export class AccountManager {
 
     this.attachTitlebarEvents()
     this.renderContent()
-    this.renderCurrentAccount()
+    // 初始化完成后再检查当前账号
+    this.checkAndUpdateCurrentAccount()
   }
 
   private attachTitlebarEvents() {
