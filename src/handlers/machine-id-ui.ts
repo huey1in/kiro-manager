@@ -436,10 +436,8 @@ export function openMachineIdHistory(): void {
 
 // 清空历史记录
 export function clearMachineIdHistory(): void {
-  if (confirm('确定要清空所有历史记录吗？此操作不可恢复。')) {
-    clearHistory()
-    updateHistoryDescription()
-    window.UI?.toast.success('已清空历史记录')
-    window.UI?.modal.closeAll()
-  }
+  clearHistory()
+  updateHistoryDescription()
+  window.UI?.toast.success('已清空历史记录')
+  window.UI?.modal.closeAll()
 }
