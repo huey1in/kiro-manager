@@ -74,6 +74,9 @@ function saveHistory() {
 
 // 添加历史记录
 function addHistoryEntry(machineId: string, action: 'manual' | 'auto_switch' | 'restore' | 'bind', accountId?: string) {
+  // 先加载最新的历史记录，确保不会覆盖其他地方添加的记录
+  loadHistory()
+  
   const entry: MachineIdHistoryEntry = {
     id: crypto.randomUUID(),
     machineId,
@@ -687,7 +690,6 @@ export async function applyMachineIdForAccount(accountId: string): Promise<boole
         console.log('[机器码] 为账户生成新的绑定机器码')
         
         // 添加绑定历史记录
-        loadHistory()
         addHistoryEntry(boundMachineId, 'bind', accountId)
       }
       
@@ -709,7 +711,6 @@ export async function applyMachineIdForAccount(accountId: string): Promise<boole
       currentMachineId = machineIdToApply
       
       // 添加自动切换历史记录
-      loadHistory()
       addHistoryEntry(machineIdToApply, 'auto_switch', accountId)
       
       return true
