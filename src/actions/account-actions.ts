@@ -5,7 +5,7 @@ import { accountStore } from '../store'
 /**
  * 刷新账号信息
  */
-export async function refreshAccount(account: Account, onUpdate?: (accountId: string) => Promise<void>): Promise<void> {
+export async function refreshAccount(account: Account): Promise<void> {
   if (!account.credentials.refreshToken || !account.credentials.clientId || !account.credentials.clientSecret) {
     window.UI?.toast.error('账号缺少刷新凭证')
     throw new Error('账号缺少刷新凭证')
@@ -58,11 +58,6 @@ export async function refreshAccount(account: Account, onUpdate?: (accountId: st
         lastError: undefined,
         lastUsedAt: now
       })
-
-      // 如果提供了更新回调，调用它
-      if (onUpdate) {
-        await onUpdate(account.id)
-      }
 
       window.UI?.toast.success('账号刷新成功')
     } else {
@@ -215,7 +210,7 @@ export async function handleBatchCheck(selectedIds: Set<string>): Promise<void> 
 /**
  * 批量刷新账号
  */
-export async function handleBatchRefresh(selectedIds: Set<string>, onUpdate?: (accountId: string) => Promise<void>): Promise<void> {
+export async function handleBatchRefresh(selectedIds: Set<string>): Promise<void> {
   const selectedAccounts = accountStore.getAccounts().filter(a => selectedIds.has(a.id))
 
   if (selectedAccounts.length === 0) {
@@ -230,7 +225,7 @@ export async function handleBatchRefresh(selectedIds: Set<string>, onUpdate?: (a
 
   for (const account of selectedAccounts) {
     try {
-      await refreshAccount(account, onUpdate)
+      await refreshAccount(account)
       successCount++
     } catch (error) {
       failedCount++
@@ -261,5 +256,92 @@ export function handleBatchDelete(selectedIds: Set<string>, onClear: () => void)
     })
     onClear()
     window.UI?.toast.success(`已删除 ${selectedCount} 个账号`)
+  }
+}
+
+/**
+ * 切换到指定账号
+ */
+export async function switchToAccount(account: Account): Promise<void> {
+  const { credentials } = account
+
+  // 检查账号状态
+  if (account.status === 'suspended') {
+    window.UI?.toast.error('无法切换到已封禁的账号')
+    throw new Error('账号已封禁')
+  }
+
+  // 检查凭证完整性
+  if (!credentials.refreshToken) {
+    window.UI?.toast.error('账号凭证不完整，无法切换')
+    throw new Error('账号凭证不完整')
+  }
+
+  if (credentials.authMethod !== 'social' && (!credentials.clientId || !credentials.clientSecret)) {
+    window.UI?.toast.error('账号凭证不完整，无法切换')
+    throw new Error('账号凭证不完整')
+  }
+
+  window.UI?.toast.info(`正在切换到账号: ${account.email}`)
+
+  try {
+    // 先尝试应用机器码（如果启用了自动更换）
+    try {
+      const { applyMachineIdForAccount } = await import('../handlers/machine-id-events')
+      const applied = await applyMachineIdForAccount(account.id)
+      if (applied) {
+        console.log('[切换账号] 已应用机器码')
+      }
+    } catch (error) {
+      console.log('[切换账号] 应用机器码失败，继续切换:', error)
+    }
+    
+    const result = await (window as any).__TAURI__.core.invoke('switch_account', {
+      accessToken: credentials.accessToken,
+      refreshToken: credentials.refreshToken,
+      clientId: credentials.clientId || '',
+      clientSecret: credentials.clientSecret || '',
+      region: credentials.region || 'us-east-1',
+      startUrl: credentials.startUrl,
+      authMethod: credentials.authMethod || 'IdC',
+      provider: credentials.provider || account.idp
+    })
+
+    if (result.success) {
+      // 立即同步本地激活账号
+      await accountStore.syncActiveAccountFromLocal()
+      window.UI?.toast.success('账号切换成功')
+    } else {
+      window.UI?.toast.error(`切换失败: ${result.error}`)
+      throw new Error(result.error || '切换失败')
+    }
+  } catch (error) {
+    window.UI?.toast.error('切换失败: ' + (error as Error).message)
+    throw error
+  }
+}
+
+/**
+ * 退出登录
+ */
+export async function logoutAccount(): Promise<void> {
+  if (!confirm('这将清除本地 SSO 缓存并退出 Kiro 登录，是否继续？')) {
+    return
+  }
+
+  try {
+    const result = await (window as any).__TAURI__.core.invoke('logout_account')
+
+    if (result.success) {
+      // 立即同步本地激活账号（应该会清除）
+      await accountStore.syncActiveAccountFromLocal()
+      window.UI?.toast.success('退出成功，已清除本地缓存')
+    } else {
+      window.UI?.toast.error(`退出失败: ${result.error}`)
+      throw new Error(result.error || '退出失败')
+    }
+  } catch (error) {
+    window.UI?.toast.error('退出失败: ' + (error as Error).message)
+    throw error
   }
 }

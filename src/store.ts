@@ -15,6 +15,7 @@ class AccountStore {
   private accounts: Account[] = []
   private listeners: Set<() => void> = new Set()
   private filter: AccountFilter = {}
+  private activeAccountId: string | null = null
   private settings: Settings = {
     privacyMode: false,
     usagePrecision: false,
@@ -148,7 +149,8 @@ class AccountStore {
     if (index !== -1) {
       this.accounts[index] = { ...this.accounts[index], ...updates }
       this.saveAccounts()
-      this.notify()
+      // 触发单个账号更新而不是全局通知
+      this.notifyAccountUpdate(id)
     }
   }
 
@@ -156,6 +158,16 @@ class AccountStore {
     this.accounts = this.accounts.filter(a => a.id !== id)
     this.saveAccounts()
     this.notify()
+  }
+
+  // 单个账号更新通知
+  private notifyAccountUpdate(accountId: string) {
+    // 触发账号卡片的局部更新
+    const event = new CustomEvent('account-updated', { detail: { accountId } })
+    window.dispatchEvent(event)
+    
+    // 仍然需要保存数据
+    this.saveAccounts()
   }
 
   // 筛选相关方法
@@ -261,6 +273,66 @@ class AccountStore {
       bySubscription,
       byStatus,
       byIdp
+    }
+  }
+
+  // 激活账号管理
+  getActiveAccountId(): string | null {
+    return this.activeAccountId
+  }
+
+  setActiveAccount(accountId: string | null) {
+    this.activeAccountId = accountId
+    this.notify()
+  }
+
+  // 根据 accessToken 查找并设置激活账号
+  async syncActiveAccountFromLocal() {
+    try {
+      const accessToken = await (window as any).__TAURI__.core.invoke('get_active_account')
+      
+      console.log('[Store] get_active_account 返回:', accessToken ? `token长度: ${accessToken.length}` : '无token')
+      
+      if (!accessToken) {
+        // 没有本地激活账号
+        if (this.activeAccountId !== null) {
+          this.activeAccountId = null
+          this.notify()
+        }
+        return
+      }
+      
+      console.log('[Store] 开始匹配账号，当前账号数量:', this.accounts.length)
+      console.log('[Store] 本地 token 前50字符:', accessToken.substring(0, 50))
+      
+      // 在账号列表中查找匹配的账号
+      const matchedAccount = this.accounts.find(
+        (account, index) => {
+          console.log(`[Store] 检查账号 ${index + 1}: ${account.email}, token前50字符:`, account.credentials.accessToken?.substring(0, 50) || '无token')
+          const match = account.credentials.accessToken === accessToken
+          if (match) {
+            console.log('[Store] ✓ 找到匹配账号:', account.email)
+          }
+          return match
+        }
+      )
+      
+      if (matchedAccount) {
+        if (this.activeAccountId !== matchedAccount.id) {
+          this.activeAccountId = matchedAccount.id
+          this.notify()
+          console.log('[Store] 同步本地激活账号:', matchedAccount.email)
+        }
+      } else {
+        console.log('[Store] ✗ 未找到匹配的账号')
+        // 本地有激活账号但列表中找不到
+        if (this.activeAccountId !== null) {
+          this.activeAccountId = null
+          this.notify()
+        }
+      }
+    } catch (error) {
+      console.error('[Store] 同步本地激活账号失败:', error)
     }
   }
 

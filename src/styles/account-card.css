@@ -18,6 +18,17 @@
   outline: none !important;
 }
 
+/* 激活账号的绿色边框 */
+.account-card.active-account {
+  border: 2px solid #10b981;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.1);
+}
+
+.account-card.active-account:hover {
+  border-color: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
 .account-card:focus,
 .account-card:focus-visible,
 .account-card:focus-within {

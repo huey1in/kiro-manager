@@ -52,5 +52,24 @@ export function renderCurrentAccount(container: Element, account?: Account | nul
         <div class="current-account-progress-bar ${isHighUsage ? 'warning' : ''}" style="width: ${account.usage.percentUsed * 100}%"></div>
       </div>
     </div>
+    <button class="current-account-logout-btn" id="current-account-logout-btn" title="退出登录">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+        <polyline points="16 17 21 12 16 7"></polyline>
+        <line x1="21" y1="12" x2="9" y2="12"></line>
+      </svg>
+      <span>退出登录</span>
+    </button>
   `
+  
+  // 添加退出登录按钮事件
+  const logoutBtn = card.querySelector('#current-account-logout-btn')
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', async () => {
+      const { logoutAccount } = await import('../actions/account-actions')
+      await logoutAccount()
+      // 退出后重新渲染为空状态
+      renderCurrentAccount(container, null)
+    })
+  }
 }

@@ -3,39 +3,10 @@ import { accountStore } from '../store'
 import { showAccountDetailDialog } from '../dialogs/detail-dialog'
 import { showEditAccountDialog } from '../dialogs/edit-account-dialog'
 import { showModelsDialog } from '../dialogs/models-dialog'
-import { refreshAccount, deleteAccount } from '../actions/account-actions'
-
-export async function checkAndUpdateCurrentAccount(
-  renderCurrentAccountFn: (account?: Account | null) => void
-) {
-  try {
-    // 获取本地活跃账号的凭证
-    const localResult = await (window as any).__TAURI__.core.invoke('get_local_active_account')
-
-    if (!localResult.success || !localResult.data) {
-      return
-    }
-
-    const { refresh_token, client_id } = localResult.data
-
-    // 在所有账号中查找匹配的账号
-    const accounts = accountStore.getAccounts()
-    const currentAccount = accounts.find(a =>
-      a.credentials.refreshToken === refresh_token ||
-      a.credentials.clientId === client_id
-    )
-
-    if (currentAccount) {
-      renderCurrentAccountFn(currentAccount)
-    }
-  } catch (error) {
-    // 静默失败，不影响主流程
-  }
-}
+import { refreshAccount, deleteAccount, switchToAccount } from '../actions/account-actions'
 
 export async function autoImportCurrentAccount(
-  renderCurrentAccountFn: (account?: Account | null) => void,
-  updateCurrentAccountIfMatchFn: (accountId: string) => Promise<void>
+  renderCurrentAccountFn: (account?: Account | null) => void
 ) {
   try {
     // 调用后端读取本地 SSO 缓存
@@ -58,8 +29,27 @@ export async function autoImportCurrentAccount(
 
     if (existingAccount) {
       console.log('[自动导入] 账号已存在,正在刷新:', existingAccount.email)
-      await refreshAccount(existingAccount, updateCurrentAccountIfMatchFn)
-      renderCurrentAccountFn(existingAccount)
+      await refreshAccount(existingAccount)
+      
+      // 刷新后将新的 accessToken 写入本地缓存
+      const updatedAccount = accountStore.getAccounts().find(a => a.id === existingAccount.id)
+      if (updatedAccount) {
+        await (window as any).__TAURI__.core.invoke('switch_account', {
+          accessToken: updatedAccount.credentials.accessToken,
+          refreshToken: updatedAccount.credentials.refreshToken,
+          clientId: updatedAccount.credentials.clientId || '',
+          clientSecret: updatedAccount.credentials.clientSecret || '',
+          region: updatedAccount.credentials.region || 'us-east-1',
+          startUrl: updatedAccount.credentials.startUrl,
+          authMethod: updatedAccount.credentials.authMethod || 'IdC',
+          provider: updatedAccount.credentials.provider || updatedAccount.idp
+        })
+      }
+      
+      renderCurrentAccountFn(updatedAccount || existingAccount)
+      
+      // 导入后立即同步激活状态
+      await accountStore.syncActiveAccountFromLocal()
       return
     }
 
@@ -119,11 +109,26 @@ export async function autoImportCurrentAccount(
 
       const newAccount = accountStore.getAccounts().find(a => a.id === newAccountId)
       console.log('[自动导入] 成功导入当前账号:', result.data.email)
-      console.log('[自动导入] 账号数据:', newAccount)
-      console.log('[自动导入] usage.nextResetDate:', newAccount?.usage.nextResetDate)
-      console.log('[自动导入] usage.resourceDetail:', newAccount?.usage.resourceDetail)
       window.UI?.toast.success(`已自动导入当前账号: ${result.data.email}`)
+      
+      // 将新账号写入本地缓存
+      if (newAccount) {
+        await (window as any).__TAURI__.core.invoke('switch_account', {
+          accessToken: newAccount.credentials.accessToken,
+          refreshToken: newAccount.credentials.refreshToken,
+          clientId: newAccount.credentials.clientId || '',
+          clientSecret: newAccount.credentials.clientSecret || '',
+          region: newAccount.credentials.region || 'us-east-1',
+          startUrl: newAccount.credentials.startUrl,
+          authMethod: newAccount.credentials.authMethod || 'IdC',
+          provider: newAccount.credentials.provider || newAccount.idp
+        })
+      }
+      
       renderCurrentAccountFn(newAccount || null)
+      
+      // 导入后立即同步激活状态
+      await accountStore.syncActiveAccountFromLocal()
     } else {
       console.log('[自动导入] 验证失败:', result.error)
       renderCurrentAccountFn(null)
@@ -134,42 +139,10 @@ export async function autoImportCurrentAccount(
   }
 }
 
-export async function updateCurrentAccountIfMatch(
-  accountId: string,
-  renderCurrentAccountFn: (account?: Account | null) => void
-) {
-  try {
-    // 获取本地活跃账号的凭证
-    const localResult = await (window as any).__TAURI__.core.invoke('get_local_active_account')
-
-    if (!localResult.success || !localResult.data) {
-      return
-    }
-
-    const { refresh_token, client_id } = localResult.data
-
-    // 获取刚刚更新的账号
-    const accounts = accountStore.getAccounts()
-    const updatedAccount = accounts.find(a => a.id === accountId)
-
-    if (!updatedAccount) return
-
-    // 检查是否匹配当前活跃账号
-    if (updatedAccount.credentials.refreshToken === refresh_token ||
-        updatedAccount.credentials.clientId === client_id) {
-      // 更新侧边栏显示
-      renderCurrentAccountFn(updatedAccount)
-    }
-  } catch (error) {
-    console.log('[更新当前账号] 检查失败:', (error as Error).message)
-  }
-}
-
 export async function handleAccountAction(
   accountId: string,
   action: string,
-  selectedIds: Set<string>,
-  updateCurrentAccountIfMatchFn: (accountId: string) => Promise<void>
+  selectedIds: Set<string>
 ) {
   const accounts = accountStore.getAccounts()
   const account = accounts.find(a => a.id === accountId)
@@ -182,8 +155,11 @@ export async function handleAccountAction(
     case 'models':
       showModelsDialog(account)
       break
+    case 'switch':
+      await switchToAccount(account)
+      break
     case 'refresh':
-      await refreshAccount(account, updateCurrentAccountIfMatchFn)
+      await refreshAccount(account)
       break
     case 'copy':
       navigator.clipboard.writeText(JSON.stringify(account.credentials, null, 2))

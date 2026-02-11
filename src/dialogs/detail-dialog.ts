@@ -63,7 +63,7 @@ export function showAccountDetailDialog(account: Account): void {
             </svg>
             <div class="suspended-text">
               <div class="suspended-title">账号已封禁</div>
-              <div class="suspended-desc">此账号已被暂停使用，无法访问服务</div>
+              <div class="suspended-desc">${account.lastError || '此账号已被暂停使用，无法访问服务'}</div>
             </div>
           </div>
         ` : `
@@ -125,7 +125,7 @@ export function showAccountDetailDialog(account: Account): void {
       <button class="ui-btn ui-btn-secondary ui-btn-sm" onclick="window.copyAccountJson()">复制数据</button>
       <button class="ui-btn ui-btn-primary ui-btn-sm" onclick="window.closeAccountDetailModal()">确定</button>
     `,
-    size: 'default',
+    size: isSuspended ? 'lg' : 'default',
     closable: true
   })
 

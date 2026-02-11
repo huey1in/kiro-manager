@@ -70,7 +70,7 @@
 }
 
 .account-status-indicator .status-dot.status-suspended {
-  background: #6b7280;
+  background: #ef4444;
 }
 
 .account-status-indicator .status-dot.status-unknown {
@@ -138,9 +138,10 @@
 }
 
 .suspended-desc {
-  font-size: 13px;
+  font-size: 12px;
   color: #991b1b;
-  line-height: 1.4;
+  line-height: 1.5;
+  word-break: break-word;
 }
 
 .detail-usage-info {

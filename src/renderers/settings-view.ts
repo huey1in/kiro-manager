@@ -165,6 +165,54 @@ export function renderSettingsView(): string {
           </div>
         ` : ''}
       </div>
+
+      <div class="settings-section">
+        <h3 class="settings-section-title">机器码自动化</h3>
+        
+        <!-- 切换账号时自动更换机器码 -->
+        <div class="settings-item">
+          <div class="settings-item-info">
+            <div class="settings-item-label">切换账号时自动更换机器码</div>
+            <div class="settings-item-desc">每次切换账号时自动生成并应用新的机器码（需要管理员权限）</div>
+          </div>
+          <label class="ui-switch">
+            <input type="checkbox" id="auto-switch-machine-id">
+            <span class="ui-switch-track">
+              <span class="ui-switch-thumb"></span>
+            </span>
+          </label>
+        </div>
+
+        <!-- 账户机器码绑定 -->
+        <div class="settings-subsection" id="machine-id-binding-subsection" style="display: none;">
+          <div class="settings-item">
+            <div class="settings-item-info">
+              <div class="settings-item-label">账户机器码绑定</div>
+              <div class="settings-item-desc" id="binding-count-desc">为每个账户分配唯一的机器码，切换时自动使用</div>
+            </div>
+            <label class="ui-switch">
+              <input type="checkbox" id="bind-machine-id">
+              <span class="ui-switch-track">
+                <span class="ui-switch-thumb"></span>
+              </span>
+            </label>
+          </div>
+
+          <!-- 使用绑定的机器码 -->
+          <div class="settings-item" id="use-bound-item" style="display: none;">
+            <div class="settings-item-info">
+              <div class="settings-item-label">使用绑定的唯一机器码</div>
+              <div class="settings-item-desc">关闭时每次切换将随机生成新机器码</div>
+            </div>
+            <label class="ui-switch">
+              <input type="checkbox" id="use-bound-machine-id">
+              <span class="ui-switch-track">
+                <span class="ui-switch-thumb"></span>
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
     </div>
   `
 }
@@ -276,7 +324,7 @@ export function attachSettingsEvents(container: Element) {
           attachSettingsEvents(contentArea)
         }
         
-        window.UI?.toast.success('自定义 Logo 已保存')
+        window.UI?.toast.success('Logo已保存')
       }
     } catch (error) {
       console.error('[设置] 选择图片失败:', error)
@@ -383,4 +431,121 @@ export function attachSettingsEvents(container: Element) {
       autoRefreshService.setSyncInfo(syncInfoSwitch.checked)
     })
   }
+
+  // 机器码自动化配置
+  initMachineIdSettings(container)
+}
+
+// 初始化机器码设置
+function initMachineIdSettings(container: Element) {
+  // 加载配置
+  const config = loadMachineIdConfig()
+  const bindings = loadAccountBindings()
+  
+  // 初始化开关状态
+  const autoSwitchCheckbox = container.querySelector('#auto-switch-machine-id') as HTMLInputElement
+  const bindCheckbox = container.querySelector('#bind-machine-id') as HTMLInputElement
+  const useBoundCheckbox = container.querySelector('#use-bound-machine-id') as HTMLInputElement
+  
+  if (autoSwitchCheckbox) autoSwitchCheckbox.checked = config.autoSwitchOnAccountChange
+  if (bindCheckbox) bindCheckbox.checked = config.bindMachineIdToAccount
+  if (useBoundCheckbox) useBoundCheckbox.checked = config.useBoundMachineId
+  
+  // 更新UI显示
+  updateMachineIdSettingsUI(config, bindings)
+  
+  // 绑定事件
+  if (autoSwitchCheckbox) {
+    autoSwitchCheckbox.addEventListener('change', () => {
+      config.autoSwitchOnAccountChange = autoSwitchCheckbox.checked
+      saveMachineIdConfig(config)
+      updateMachineIdSettingsUI(config, bindings)
+      
+      if (config.autoSwitchOnAccountChange) {
+        window.UI?.toast.success('已开启切换账号时自动更换机器码')
+      } else {
+        window.UI?.toast.info('已关闭切换账号时自动更换机器码')
+      }
+    })
+  }
+  
+  if (bindCheckbox) {
+    bindCheckbox.addEventListener('change', () => {
+      config.bindMachineIdToAccount = bindCheckbox.checked
+      saveMachineIdConfig(config)
+      updateMachineIdSettingsUI(config, bindings)
+      
+      if (config.bindMachineIdToAccount) {
+        window.UI?.toast.success('已开启账户机器码绑定')
+      } else {
+        window.UI?.toast.info('已关闭账户机器码绑定')
+      }
+    })
+  }
+  
+  if (useBoundCheckbox) {
+    useBoundCheckbox.addEventListener('change', () => {
+      config.useBoundMachineId = useBoundCheckbox.checked
+      saveMachineIdConfig(config)
+      
+      if (config.useBoundMachineId) {
+        window.UI?.toast.success('将使用绑定的唯一机器码')
+      } else {
+        window.UI?.toast.info('每次切换将随机生成新机器码')
+      }
+    })
+  }
+}
+
+// 更新机器码设置UI
+function updateMachineIdSettingsUI(config: any, bindings: any) {
+  const bindingSubsection = document.getElementById('machine-id-binding-subsection')
+  const useBoundItem = document.getElementById('use-bound-item')
+  const bindingCountDesc = document.getElementById('binding-count-desc')
+  
+  // 显示/隐藏子选项
+  if (bindingSubsection) {
+    bindingSubsection.style.display = config.autoSwitchOnAccountChange ? 'block' : 'none'
+  }
+  
+  if (useBoundItem) {
+    useBoundItem.style.display = config.bindMachineIdToAccount ? 'block' : 'none'
+  }
+  
+  // 更新绑定数量（排除已封禁的账号）
+  if (bindingCountDesc) {
+    const bindingCount = Object.keys(bindings).length
+    if (bindingCount > 0) {
+      bindingCountDesc.textContent = `为每个账户分配唯一的机器码，切换时自动使用（已绑定 ${bindingCount} 个账户）`
+    } else {
+      bindingCountDesc.textContent = `为每个账户分配唯一的机器码，切换时自动使用`
+    }
+  }
+}
+
+// 加载机器码配置
+function loadMachineIdConfig() {
+  const saved = localStorage.getItem('machine_id_config')
+  if (saved) {
+    return JSON.parse(saved)
+  }
+  return {
+    autoSwitchOnAccountChange: false,
+    bindMachineIdToAccount: false,
+    useBoundMachineId: true
+  }
+}
+
+// 保存机器码配置
+function saveMachineIdConfig(config: any) {
+  localStorage.setItem('machine_id_config', JSON.stringify(config))
+}
+
+// 加载账户绑定
+function loadAccountBindings() {
+  const saved = localStorage.getItem('account_machine_id_bindings')
+  if (saved) {
+    return JSON.parse(saved)
+  }
+  return {}
 }

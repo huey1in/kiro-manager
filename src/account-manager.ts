@@ -3,6 +3,8 @@ import { accountStore } from './store'
 import { renderCurrentAccount } from './renderers/current-account'
 import { renderAccountsView } from './renderers/accounts-view'
 import { renderSettingsView, attachSettingsEvents } from './renderers/settings-view'
+import { renderMachineIdView } from './renderers/machine-id-view'
+import { initMachineIdPage } from './handlers/machine-id-events'
 import { showExportDialog } from './dialogs/export-dialog'
 import { attachTitlebarEvents } from './handlers/titlebar-events'
 import { attachAccountsEvents } from './handlers/accounts-events'
@@ -30,11 +32,18 @@ export class AccountManager {
 
   async init() {
     await accountStore.loadAccounts()
+    
+    // 同步本地激活账号
+    await accountStore.syncActiveAccountFromLocal()
+    
     this.unsubscribe = accountStore.subscribe(() => {
       this.renderContent()
-      // 账号数据更新时，检查并更新当前账号显示
-      this.checkAndUpdateCurrentAccount()
+      // 账号数据或激活状态变化时更新当前账号显示
+      this.updateCurrentAccountDisplay()
     })
+
+    // 监听单个账号更新事件
+    window.addEventListener('account-updated', this.handleAccountUpdate.bind(this))
 
     // 启动时自动导入当前活跃账号
     await this.autoImportCurrentAccount()
@@ -45,18 +54,27 @@ export class AccountManager {
     if (config.enabled) {
       autoRefreshService.start()
     }
+    
+    // 定期同步本地激活账号（每5秒检查一次）
+    setInterval(() => {
+      accountStore.syncActiveAccountFromLocal()
+    }, 5000)
   }
 
-  private async checkAndUpdateCurrentAccount() {
-    await checkAndUpdateCurrentAccount(
-      (account) => this.renderCurrentAccount(account)
-    )
+  private updateCurrentAccountDisplay() {
+    const activeAccountId = accountStore.getActiveAccountId()
+    if (activeAccountId) {
+      const accounts = accountStore.getAccounts()
+      const activeAccount = accounts.find(a => a.id === activeAccountId)
+      this.renderCurrentAccount(activeAccount || null)
+    } else {
+      this.renderCurrentAccount(null)
+    }
   }
 
   private async autoImportCurrentAccount() {
     await autoImportCurrentAccount(
-      (account) => this.renderCurrentAccount(account),
-      (accountId) => this.updateCurrentAccountIfMatch(accountId)
+      (account) => this.renderCurrentAccount(account)
     )
   }
 
@@ -64,19 +82,57 @@ export class AccountManager {
     renderCurrentAccount(this.container, account)
   }
 
-  private async updateCurrentAccountIfMatch(accountId: string) {
-    await updateCurrentAccountIfMatch(
-      accountId,
-      (account) => this.renderCurrentAccount(account)
-    )
-  }
-
   public destroy() {
     if (this.unsubscribe) {
       this.unsubscribe()
     }
+    // 移除账号更新监听器
+    window.removeEventListener('account-updated', this.handleAccountUpdate.bind(this))
     // 停止自动刷新服务
     autoRefreshService.stop()
+  }
+
+  // 处理单个账号更新
+  private handleAccountUpdate(event: Event) {
+    const customEvent = event as CustomEvent<{ accountId: string }>
+    const { accountId } = customEvent.detail
+    
+    // 只在账号管理视图时更新
+    const activeView = this.container.querySelector('.sidebar-link.active')?.getAttribute('data-view')
+    if (activeView !== 'accounts') return
+    
+    // 查找对应的账号卡片
+    const cardElement = this.container.querySelector(`[data-account-id="${accountId}"]`)
+    if (!cardElement) return
+    
+    // 获取更新后的账号数据
+    const accounts = accountStore.getAccounts()
+    const account = accounts.find(a => a.id === accountId)
+    if (!account) return
+    
+    // 获取当前选中状态
+    const isSelected = this.selectedIds.has(accountId)
+    
+    // 获取当前视图模式
+    const settings = accountStore.getSettings()
+    const viewMode = settings.viewMode
+    
+    // 重新渲染单个卡片
+    const { renderAccountCard, renderAccountListItem } = require('./renderers/account-card')
+    const newCardHtml = viewMode === 'grid' 
+      ? renderAccountCard(account, isSelected)
+      : renderAccountListItem(account, isSelected)
+    
+    // 替换卡片内容
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = newCardHtml
+    const newCard = tempDiv.firstElementChild
+    
+    if (newCard) {
+      cardElement.replaceWith(newCard)
+      // 重新绑定事件
+      this.attachAccountCardEvents()
+    }
   }
 
   public render() {
@@ -115,6 +171,12 @@ export class AccountManager {
               </svg>
               <span>账户管理</span>
             </button>
+            <button class="sidebar-link" data-view="machine-id">
+              <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+              </svg>
+              <span>机器码管理</span>
+            </button>
             <button class="sidebar-link" data-view="settings">
               <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -137,8 +199,8 @@ export class AccountManager {
 
     this.attachTitlebarEvents()
     this.renderContent()
-    // 初始化完成后再检查当前账号
-    this.checkAndUpdateCurrentAccount()
+    // DOM 渲染完成后更新当前账号显示
+    this.updateCurrentAccountDisplay()
   }
 
   private attachTitlebarEvents() {
@@ -153,6 +215,8 @@ export class AccountManager {
 
     if (activeView === 'accounts') {
       this.renderAccountsView(contentArea)
+    } else if (activeView === 'machine-id') {
+      this.renderMachineIdView(contentArea)
     } else if (activeView === 'settings') {
       this.renderSettingsView(contentArea)
     }
@@ -174,6 +238,12 @@ export class AccountManager {
     attachSettingsEvents(container)
   }
 
+  private renderMachineIdView(container: Element) {
+    container.innerHTML = renderMachineIdView()
+    // 初始化机器码页面
+    initMachineIdPage()
+  }
+
   private attachAccountsEvents() {
     attachAccountsEvents(
       this.container,
@@ -183,8 +253,7 @@ export class AccountManager {
       () => this.handleExport(),
       () => this.updateAccountList(),
       () => this.updateSelectionUI(),
-      () => this.attachAccountCardEvents(),
-      (accountId) => this.updateCurrentAccountIfMatch(accountId)
+      () => this.attachAccountCardEvents()
     )
   }
 

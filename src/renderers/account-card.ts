@@ -32,9 +32,10 @@ export function renderAccountCard(account: Account, isSelected: boolean): string
   const displayNickname = accountStore.maskNickname(account.nickname)
   const subscriptionColor = getSubscriptionColor(account.subscription.type)
   const isHighUsage = account.usage.percentUsed > 0.8
+  const isActive = accountStore.getActiveAccountId() === account.id
 
   return `
-    <div class="ui-card account-card ui-hover-lift" data-account-id="${account.id}" data-status="${account.status}">
+    <div class="account-card ${isActive ? 'active-account' : ''}" data-account-id="${account.id}" data-status="${account.status}">
       <!-- 头部区域 -->
       <div class="card-header">
         <div class="checkbox-wrapper">
@@ -93,6 +94,12 @@ export function renderAccountCard(account: Account, isSelected: boolean): string
 
       <!-- 操作按钮 -->
       <div class="actions-row">
+        <button class="btn-icon" title="切换到此账号" data-action="switch">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+            <line x1="12" y1="2" x2="12" y2="12"></line>
+          </svg>
+        </button>
         <button class="btn-icon" title="查看详情" data-action="detail">
           <svg viewBox="0 0 24 24" width="16" height="16">
             <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"></circle>
@@ -153,9 +160,10 @@ export function renderAccountListItem(account: Account, isSelected: boolean): st
   const displayNickname = accountStore.maskNickname(account.nickname)
   const subscriptionColor = getSubscriptionColor(account.subscription.type)
   const isHighUsage = account.usage.percentUsed > 0.8
+  const isActive = accountStore.getActiveAccountId() === account.id
 
   return `
-    <div class="account-list-item" data-account-id="${account.id}" data-status="${account.status}">
+    <div class="account-list-item ${isActive ? 'active-account' : ''}" data-account-id="${account.id}" data-status="${account.status}">
       <div class="list-item-left">
         <div class="custom-checkbox ${isSelected ? 'checked' : ''}" data-action="toggle-select">
           ${isSelected ? '<svg fill="currentColor" viewBox="0 0 20 20" width="12" height="12"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>' : ''}
@@ -199,6 +207,12 @@ export function renderAccountListItem(account: Account, isSelected: boolean): st
         </div>
       </div>
       <div class="list-item-actions">
+        <button class="btn-icon" title="切换到此账号" data-action="switch">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+            <line x1="12" y1="2" x2="12" y2="12"></line>
+          </svg>
+        </button>
         <button class="btn-icon" title="查看详情" data-action="detail">
           <svg viewBox="0 0 24 24" width="16" height="16">
             <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"></circle>

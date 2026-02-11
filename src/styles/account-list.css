@@ -18,6 +18,17 @@
   outline: none !important;
 }
 
+/* 激活账号的绿色边框 */
+.account-list-item.active-account {
+  border: 2px solid #10b981;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.1);
+}
+
+.account-list-item.active-account:hover {
+  border-color: #10b981;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+}
+
 .account-list-item:focus,
 .account-list-item:focus-visible,
 .account-list-item:focus-within {
@@ -34,7 +45,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 0 0 120px;
+  flex: 0 0 110px;
   min-width: 0;
 }
 
@@ -83,7 +94,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 3px;
-  flex: 0 0 65px;
+  flex: 0 0 60px;
 }
 
 .list-item-center .badge {
@@ -96,7 +107,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
-  flex: 0 0 85px;
+  flex: 0 0 80px;
 }
 
 .list-item-info {
@@ -104,7 +115,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
-  flex: 0 0 80px;
+  flex: 0 0 75px;
 }
 
 .list-info-item {
@@ -184,7 +195,7 @@
   display: flex;
   align-items: center;
   gap: 1px;
-  flex: 0 0 150px;
+  flex: 0 0 170px;
   flex-shrink: 0;
 }
 

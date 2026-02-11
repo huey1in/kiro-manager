@@ -10,8 +10,7 @@ export function attachAccountsEvents(
   onExport: () => void,
   onUpdateAccountList: () => void,
   onUpdateSelectionUI: () => void,
-  onAttachAccountCardEvents: () => void,
-  updateCurrentAccountIfMatch: (accountId: string) => Promise<void>
+  onAttachAccountCardEvents: () => void
 ) {
   const searchInput = container.querySelector('#search-input') as HTMLInputElement
   if (searchInput) {
@@ -157,7 +156,7 @@ export function attachAccountsEvents(
 
   const batchRefreshBtn = container.querySelector('#batch-refresh-btn')
   if (batchRefreshBtn) {
-    batchRefreshBtn.addEventListener('click', () => handleBatchRefresh(selectedIds, updateCurrentAccountIfMatch))
+    batchRefreshBtn.addEventListener('click', () => handleBatchRefresh(selectedIds))
   }
 
   const batchDeleteBtn = container.querySelector('#batch-delete-btn')
