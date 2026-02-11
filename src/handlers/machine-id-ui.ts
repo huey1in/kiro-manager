@@ -348,26 +348,24 @@ export async function generateBindingForAccount(accountId: string): Promise<void
 
 // 移除账户绑定
 export function removeAccountBinding(accountId: string): void {
-  if (confirm('确定要解除此账户的机器码绑定吗？')) {
-    removeBinding(accountId)
-    updateAccountBindingDescription()
-    window.UI?.toast.success('已解除绑定')
+  removeBinding(accountId)
+  updateAccountBindingDescription()
+  window.UI?.toast.success('已解除绑定')
+  
+  // 更新UI
+  const accountItem = document.querySelector(`[data-account-id="${accountId}"]`)
+  if (accountItem) {
+    const descEl = accountItem.querySelector('.settings-item-desc')
+    const actionsEl = accountItem.querySelector('.settings-item-info + div')
     
-    // 更新UI
-    const accountItem = document.querySelector(`[data-account-id="${accountId}"]`)
-    if (accountItem) {
-      const descEl = accountItem.querySelector('.settings-item-desc')
-      const actionsEl = accountItem.querySelector('.settings-item-info + div')
-      
-      if (descEl) {
-        descEl.textContent = '未绑定'
-      }
-      
-      if (actionsEl) {
-        actionsEl.innerHTML = `
-          <button class="ui-btn ui-btn-primary ui-btn-sm" onclick="window.generateBindingForAccount('${accountId}')">生成绑定</button>
-        `
-      }
+    if (descEl) {
+      descEl.textContent = '未绑定'
+    }
+    
+    if (actionsEl) {
+      actionsEl.innerHTML = `
+        <button class="ui-btn ui-btn-primary ui-btn-sm" onclick="window.generateBindingForAccount('${accountId}')">生成绑定</button>
+      `
     }
   }
 }
