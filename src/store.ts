@@ -287,7 +287,14 @@ class AccountStore {
   }
 
   // 根据 accessToken 查找并设置激活账号
+  private syncInProgress = false
   async syncActiveAccountFromLocal() {
+    // 防止并发执行
+    if (this.syncInProgress) {
+      return
+    }
+
+    this.syncInProgress = true
     try {
       const accessToken = await (window as any).__TAURI__.core.invoke('get_active_account')
       
@@ -333,6 +340,8 @@ class AccountStore {
       }
     } catch (error) {
       console.error('[Store] 同步本地激活账号失败:', error)
+    } finally {
+      this.syncInProgress = false
     }
   }
 

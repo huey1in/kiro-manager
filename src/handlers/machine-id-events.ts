@@ -1,8 +1,10 @@
 // 机器码管理页面事件处理器 - 主入口
+import { accountStore } from '../store'
 import {
   loadConfig,
   loadOriginalMachineId,
-  getAccountBinding
+  getAccountBinding,
+  cleanupDeletedAccountBindings
 } from './machine-id-storage'
 import {
   checkAdminPrivilege,
@@ -30,12 +32,18 @@ import {
 
 // 初始化机器码页面
 export async function initMachineIdPage(): Promise<void> {
+  // 清理已删除账号的绑定
+  const accounts = accountStore.getAccounts()
+  const accountIds = accounts.map(a => a.id)
+  cleanupDeletedAccountBindings(accountIds)
+  
   // 更新描述
   updateHistoryDescription()
   updateAccountBindingDescription()
   
   // 检查管理员权限
   const hasPrivilege = await checkAdminPrivilege()
+  setAdminPrivilege(hasPrivilege)
   const warningEl = document.getElementById('admin-warning')
   if (warningEl) {
     warningEl.style.display = hasPrivilege ? 'none' : 'flex'
@@ -44,6 +52,7 @@ export async function initMachineIdPage(): Promise<void> {
   // 加载机器码
   const result = await fetchMachineId()
   if (result.success && result.machineId) {
+    setCurrentMachineId(result.machineId)
     updateCurrentMachineIdDisplay(result.machineId)
   } else {
     updateCurrentMachineIdDisplay(null, result.error)

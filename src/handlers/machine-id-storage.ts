@@ -104,7 +104,30 @@ export function addHistoryEntry(
     accountId
   }
   machineIdHistory.push(entry)
+  
+  // 限制历史记录数量，最多保留 500 条
+  if (machineIdHistory.length > 500) {
+    machineIdHistory = machineIdHistory.slice(-500)
+  }
+  
   saveHistory(machineIdHistory)
+}
+
+// 清理已删除账号的绑定
+export function cleanupDeletedAccountBindings(existingAccountIds: string[]): void {
+  const bindings = loadAccountBindings()
+  let hasChanges = false
+  
+  for (const accountId in bindings) {
+    if (!existingAccountIds.includes(accountId)) {
+      delete bindings[accountId]
+      hasChanges = true
+    }
+  }
+  
+  if (hasChanges) {
+    saveAccountBindings(bindings)
+  }
 }
 
 // 清空历史记录

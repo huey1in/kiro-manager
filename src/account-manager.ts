@@ -17,12 +17,14 @@ import {
 } from './services/account-service'
 import { autoRefreshService } from './services/auto-refresh-service'
 import logoSvg from './assets/logo.svg'
+import kiroIconSvg from './assets/kiro-icon.svg'
 
 export class AccountManager {
   private container: HTMLElement
   private selectedIds: Set<string> = new Set()
   private isFilterExpanded: boolean = false
   private unsubscribe: (() => void) | null = null
+  private syncInterval: NodeJS.Timeout | null = null
 
   constructor(container: HTMLElement) {
     this.container = container
@@ -54,7 +56,7 @@ export class AccountManager {
     }
     
     // 定期同步本地激活账号（每5秒检查一次）
-    setInterval(() => {
+    this.syncInterval = setInterval(() => {
       accountStore.syncActiveAccountFromLocal()
     }, 5000)
   }
@@ -88,6 +90,11 @@ export class AccountManager {
     window.removeEventListener('account-updated', this.handleAccountUpdate.bind(this))
     // 停止自动刷新服务
     autoRefreshService.stop()
+    // 清除同步定时器
+    if (this.syncInterval) {
+      clearInterval(this.syncInterval)
+      this.syncInterval = null
+    }
   }
 
   // 处理单个账号更新
@@ -116,21 +123,22 @@ export class AccountManager {
     const viewMode = settings.viewMode
     
     // 重新渲染单个卡片
-    const { renderAccountCard, renderAccountListItem } = require('./renderers/account-card')
-    const newCardHtml = viewMode === 'grid' 
-      ? renderAccountCard(account, isSelected)
-      : renderAccountListItem(account, isSelected)
-    
-    // 替换卡片内容
-    const tempDiv = document.createElement('div')
-    tempDiv.innerHTML = newCardHtml
-    const newCard = tempDiv.firstElementChild
-    
-    if (newCard) {
-      cardElement.replaceWith(newCard)
-      // 重新绑定事件
-      this.attachAccountCardEvents()
-    }
+    import('./renderers/account-card').then(({ renderAccountCard, renderAccountListItem }) => {
+      const newCardHtml = viewMode === 'grid' 
+        ? renderAccountCard(account, isSelected)
+        : renderAccountListItem(account, isSelected)
+      
+      // 替换卡片内容
+      const tempDiv = document.createElement('div')
+      tempDiv.innerHTML = newCardHtml
+      const newCard = tempDiv.firstElementChild
+      
+      if (newCard) {
+        cardElement.replaceWith(newCard)
+        // 重新绑定事件
+        this.attachAccountCardEvents()
+      }
+    })
   }
 
   public render() {
@@ -175,6 +183,16 @@ export class AccountManager {
               </svg>
               <span>机器码管理</span>
             </button>
+            <button class="sidebar-link" data-view="kiro-settings">
+              <img src="${kiroIconSvg}" alt="Kiro" class="sidebar-icon" style="width: 20px; height: 20px;" />
+              <span>Kiro 设置</span>
+            </button>
+            <button class="sidebar-link" data-view="proxy">
+              <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+              </svg>
+              <span>API 反代</span>
+            </button>
             <button class="sidebar-link" data-view="settings">
               <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -215,6 +233,10 @@ export class AccountManager {
       this.renderAccountsView(contentArea)
     } else if (activeView === 'machine-id') {
       this.renderMachineIdView(contentArea)
+    } else if (activeView === 'kiro-settings') {
+      this.renderKiroSettingsView(contentArea)
+    } else if (activeView === 'proxy') {
+      this.renderProxyView(contentArea)
     } else if (activeView === 'settings') {
       this.renderSettingsView(contentArea)
     }
@@ -231,8 +253,9 @@ export class AccountManager {
     this.attachAccountsEvents()
   }
 
-  private renderSettingsView(container: Element) {
-    container.innerHTML = renderSettingsView()
+  private async renderSettingsView(container: Element) {
+    const html = await renderSettingsView()
+    container.innerHTML = html
     attachSettingsEvents(container)
   }
 
@@ -240,6 +263,20 @@ export class AccountManager {
     container.innerHTML = renderMachineIdView()
     // 初始化机器码页面
     initMachineIdPage()
+  }
+
+  private renderKiroSettingsView(container: Element) {
+    import('./renderers/kiro-settings-view').then(({ renderKiroSettingsView, initKiroSettingsPage }) => {
+      container.innerHTML = renderKiroSettingsView()
+      initKiroSettingsPage(container as HTMLElement)
+    })
+  }
+
+  private renderProxyView(container: Element) {
+    import('./renderers/proxy-view').then(({ renderProxyView, initProxyPage }) => {
+      container.innerHTML = renderProxyView()
+      initProxyPage(container as HTMLElement)
+    })
   }
 
   private attachAccountsEvents() {
@@ -356,5 +393,48 @@ declare global {
     submitExport?: () => void
     closeAccountDetailModal?: () => void
     copyAccountJson?: () => void
+    
+    // MCP 服务器对话框
+    closeMcpServerDialog?: () => void
+    submitMcpServer?: () => void
+    
+    // Steering 文件对话框
+    closeSteeringFileDialog?: () => void
+    submitSteeringFile?: () => void
+    
+    // JSON 编辑器对话框
+    closeJsonEditorDialog?: () => void
+    formatJson?: () => void
+    submitJsonEditor?: () => void
+    
+    // 重命名对话框
+    closeRenameDialog?: () => void
+    submitRename?: () => void
+    
+    // 反代账号选择对话框
+    selectAllProxyAccounts?: () => void
+    deselectAllProxyAccounts?: () => void
+    closeProxyAccountSelectDialog?: () => void
+    confirmProxyAccountSelect?: () => void
+    
+    // Kiro 设置页面函数
+    selectAgentAutonomy?: (value: string) => void
+    selectConfigureMcp?: (value: string) => void
+    addMcpServer?: () => void
+    editMcpServer?: (name: string) => void
+    deleteMcpServer?: (name: string) => void
+    openUserMcpConfig?: () => void
+    openWorkspaceMcpConfig?: () => void
+    createSteeringFile?: () => void
+    editSteeringFile?: (filename: string) => void
+    renameSteeringFile?: (filename: string) => void
+    openSteeringFile?: (filename: string) => void
+    deleteSteeringFile?: (filename: string) => void
+    openSteeringFolder?: () => void
+    addTrustedCommand?: () => void
+    removeTrustedCommand?: (index: number) => void
+    addDenyCommand?: () => void
+    removeDenyCommand?: (index: number) => void
+    addDefaultDenyCommands?: () => void
   }
 }

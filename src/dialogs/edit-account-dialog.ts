@@ -76,8 +76,27 @@ export function showEditAccountDialog(account: Account): void {
     const accessToken = (document.getElementById('edit-account-access-token') as HTMLTextAreaElement)?.value
     const refreshToken = (document.getElementById('edit-account-refresh-token') as HTMLTextAreaElement)?.value
 
+    // 输入验证
     if (!email || !accessToken) {
       window.UI?.toast.error('请填写必填项')
+      return
+    }
+
+    // 邮箱格式验证
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      window.UI?.toast.error('邮箱格式不正确')
+      return
+    }
+
+    // Token 长度验证
+    if (accessToken.length < 10 || accessToken.length > 10000) {
+      window.UI?.toast.error('Access Token 长度不合法')
+      return
+    }
+
+    if (refreshToken && (refreshToken.length < 10 || refreshToken.length > 10000)) {
+      window.UI?.toast.error('Refresh Token 长度不合法')
       return
     }
 

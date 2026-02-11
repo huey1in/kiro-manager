@@ -106,22 +106,24 @@ export function showExportDialog(accounts: Account[], selectedCount: number): vo
   }
 
   window.submitExport = async () => {
-    const content = generateExportContent(accounts, selectedFormat, includeCredentials)
-
-    if (selectedFormat === 'clipboard') {
-      await navigator.clipboard.writeText(content)
-      window.UI?.toast.success('已复制到剪贴板')
-      window.UI?.modal.close(modal)
-      delete window.closeExportDialog
-      delete window.submitExport
-      return
-    }
-
-    const extensions = { json: 'json', txt: 'txt', csv: 'csv' }
-    const ext = extensions[selectedFormat]
-    const defaultFilename = `kiro-accounts-${new Date().toISOString().slice(0, 10)}.${ext}`
-
     try {
+      const content = generateExportContent(accounts, selectedFormat, includeCredentials)
+      console.log('[导出] 生成内容成功，长度:', content.length)
+
+      if (selectedFormat === 'clipboard') {
+        await navigator.clipboard.writeText(content)
+        window.UI?.toast.success('已复制到剪贴板')
+        window.UI?.modal.close(modal)
+        delete window.closeExportDialog
+        delete window.submitExport
+        return
+      }
+
+      const extensions = { json: 'json', txt: 'txt', csv: 'csv' }
+      const ext = extensions[selectedFormat]
+      const defaultFilename = `kiro-accounts-${new Date().toISOString().slice(0, 10)}.${ext}`
+      console.log('[导出] 默认文件名:', defaultFilename)
+
       // 使用 Tauri 的 save 对话框
       const filePath = await (window as any).__TAURI__.dialog.save({
         title: '导出账号数据',
@@ -132,15 +134,23 @@ export function showExportDialog(accounts: Account[], selectedCount: number): vo
         }]
       })
 
+      console.log('[导出] 选择的文件路径:', filePath)
+
       if (filePath) {
         // 写入文件
+        console.log('[导出] 开始写入文件...')
         await (window as any).__TAURI__.fs.writeTextFile(filePath, content)
-        window.UI?.toast.success(`已导出 ${accounts.length} 个账号`)
+        console.log('[导出] 文件写入成功')
+        
+        window.UI?.toast.success(`已导出 ${accounts.length} 个账号到: ${filePath}`)
         window.UI?.modal.close(modal)
         delete window.closeExportDialog
         delete window.submitExport
+      } else {
+        console.log('[导出] 用户取消了文件选择')
       }
     } catch (error) {
+      console.error('[导出] 导出失败:', error)
       window.UI?.toast.error('导出失败: ' + (error as Error).message)
     }
   }

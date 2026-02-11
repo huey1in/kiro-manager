@@ -41,6 +41,7 @@
 }
 
 .ui-btn-secondary.active:hover {
+  background: var(--primary);
   opacity: 0.9;
 }
 

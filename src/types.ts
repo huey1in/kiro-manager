@@ -126,5 +126,17 @@ declare global {
     closeAccountDetailModal?: () => void
     refreshModels?: () => void
     closeModelsModal?: () => void
+    // 反代相关
+    addApiKey?: () => void
+    cancelAddKey?: () => void
+    confirmAddKey?: () => void
+    removeApiKey?: (index: number) => void
+    closeApiKeysDialog?: () => void
+    confirmApiKeys?: () => void
+    closeProxyModelsDialog?: () => void
+    selectAllProxyAccounts?: () => void
+    deselectAllProxyAccounts?: () => void
+    closeProxyAccountSelectDialog?: () => void
+    confirmProxyAccountSelect?: () => void
   }
 }

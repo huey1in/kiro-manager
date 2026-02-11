@@ -5,6 +5,8 @@ mod storage;
 mod models;
 mod switch;
 mod machine_id;
+mod kiro_settings;
+mod proxy;
 
 use tauri::{Manager, PhysicalPosition};
 
@@ -15,6 +17,10 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .setup(|app| {
+            // 初始化 ProxyState
+            let proxy_state = proxy::ProxyState::new(app.handle());
+            app.manage(proxy_state);
+            
             let window = app.get_webview_window("main").unwrap();
             
             // 恢复窗口位置
@@ -60,7 +66,32 @@ pub fn run() {
             machine_id::get_current_machine_id,
             machine_id::set_machine_id,
             machine_id::check_admin_privilege,
-            machine_id::generate_random_machine_id
+            machine_id::generate_random_machine_id,
+            kiro_settings::get_kiro_settings,
+            kiro_settings::save_kiro_settings,
+            kiro_settings::get_kiro_available_models,
+            kiro_settings::open_kiro_settings_file,
+            kiro_settings::open_kiro_mcp_config,
+            kiro_settings::read_kiro_mcp_config,
+            kiro_settings::write_kiro_mcp_config,
+            kiro_settings::open_kiro_steering_folder,
+            kiro_settings::open_kiro_steering_file,
+            kiro_settings::read_kiro_steering_file,
+            kiro_settings::save_kiro_steering_file,
+            kiro_settings::delete_kiro_steering_file,
+            kiro_settings::rename_kiro_steering_file,
+            kiro_settings::create_kiro_default_rules,
+            kiro_settings::save_mcp_server,
+            kiro_settings::delete_mcp_server,
+            proxy::commands::start_proxy_server,
+            proxy::commands::stop_proxy_server,
+            proxy::commands::get_proxy_status,
+            proxy::commands::update_proxy_config,
+            proxy::commands::sync_proxy_accounts,
+            proxy::commands::get_proxy_accounts,
+            proxy::commands::get_proxy_models,
+            proxy::commands::get_proxy_logs,
+            proxy::commands::reset_proxy_stats
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

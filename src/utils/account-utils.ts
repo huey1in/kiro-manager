@@ -70,86 +70,96 @@ export function generateExportContent(
   format: string,
   includeCredentials: boolean
 ): string {
-  switch (format) {
-    case 'json':
-      const exportData = {
-        version: '1.0',
-        exportedAt: new Date().toISOString(),
-        accounts: includeCredentials
-          ? accounts
-          : accounts.map(acc => ({
-              ...acc,
-              credentials: {
-                ...acc.credentials,
-                accessToken: '',
-                refreshToken: '',
-                csrfToken: ''
-              }
-            }))
-      }
-      return JSON.stringify(exportData, null, 2)
+  try {
+    // 限制导出数量
+    if (accounts.length > 1000) {
+      throw new Error('导出账号数量过多，最多支持 1000 个')
+    }
 
-    case 'txt':
-      if (includeCredentials) {
-        return accounts.map(acc =>
-          [
-            acc.email,
-            acc.credentials?.refreshToken || '',
-            acc.nickname || '',
-            acc.idp || 'BuilderId'
-          ].join(',')
+    switch (format) {
+      case 'json':
+        const exportData = {
+          version: '1.0',
+          exportedAt: new Date().toISOString(),
+          accounts: includeCredentials
+            ? accounts
+            : accounts.map(acc => ({
+                ...acc,
+                credentials: {
+                  ...acc.credentials,
+                  accessToken: '',
+                  refreshToken: '',
+                  csrfToken: ''
+                }
+              }))
+        }
+        return JSON.stringify(exportData, null, 2)
+
+      case 'txt':
+        if (includeCredentials) {
+          return accounts.map(acc =>
+            [
+              acc.email,
+              acc.credentials?.refreshToken || '',
+              acc.nickname || '',
+              acc.idp || 'BuilderId'
+            ].join(',')
+          ).join('\n')
+        }
+        return accounts.map(acc => {
+          const lines = [
+            `邮箱: ${acc.email}`,
+            acc.nickname ? `昵称: ${acc.nickname}` : null,
+            acc.idp ? `登录方式: ${acc.idp}` : null,
+            acc.subscription?.title ? `订阅: ${acc.subscription.title}` : null,
+            acc.usage ? `用量: ${acc.usage.current ?? 0}/${acc.usage.limit ?? 0}` : null,
+          ].filter(Boolean)
+          return lines.join('\n')
+        }).join('\n\n---\n\n')
+
+      case 'csv':
+        const headers = includeCredentials
+          ? ['邮箱', '昵称', '登录方式', 'RefreshToken', 'ClientId', 'ClientSecret', 'Region']
+          : ['邮箱', '昵称', '登录方式', '订阅类型', '订阅标题', '已用量', '总额度']
+        const rows = accounts.map(acc => includeCredentials
+          ? [
+              acc.email,
+              acc.nickname || '',
+              acc.idp || '',
+              acc.credentials?.refreshToken || '',
+              acc.credentials?.clientId || '',
+              acc.credentials?.clientSecret || '',
+              acc.credentials?.region || 'us-east-1'
+            ]
+          : [
+              acc.email,
+              acc.nickname || '',
+              acc.idp || '',
+              acc.subscription?.type || '',
+              acc.subscription?.title || '',
+              String(acc.usage?.current ?? ''),
+              String(acc.usage?.limit ?? '')
+            ]
+        )
+        return '\ufeff' + [headers, ...rows].map(row =>
+          row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
         ).join('\n')
-      }
-      return accounts.map(acc => {
-        const lines = [
-          `邮箱: ${acc.email}`,
-          acc.nickname ? `昵称: ${acc.nickname}` : null,
-          acc.idp ? `登录方式: ${acc.idp}` : null,
-          acc.subscription?.title ? `订阅: ${acc.subscription.title}` : null,
-          acc.usage ? `用量: ${acc.usage.current ?? 0}/${acc.usage.limit ?? 0}` : null,
-        ].filter(Boolean)
-        return lines.join('\n')
-      }).join('\n\n---\n\n')
 
-    case 'csv':
-      const headers = includeCredentials
-        ? ['邮箱', '昵称', '登录方式', 'RefreshToken', 'ClientId', 'ClientSecret', 'Region']
-        : ['邮箱', '昵称', '登录方式', '订阅类型', '订阅标题', '已用量', '总额度']
-      const rows = accounts.map(acc => includeCredentials
-        ? [
-            acc.email,
-            acc.nickname || '',
-            acc.idp || '',
-            acc.credentials?.refreshToken || '',
-            acc.credentials?.clientId || '',
-            acc.credentials?.clientSecret || '',
-            acc.credentials?.region || 'us-east-1'
-          ]
-        : [
-            acc.email,
-            acc.nickname || '',
-            acc.idp || '',
-            acc.subscription?.type || '',
-            acc.subscription?.title || '',
-            String(acc.usage?.current ?? ''),
-            String(acc.usage?.limit ?? '')
-          ]
-      )
-      return '\ufeff' + [headers, ...rows].map(row =>
-        row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
-      ).join('\n')
-
-    case 'clipboard':
-      if (includeCredentials) {
+      case 'clipboard':
+        if (includeCredentials) {
+          return accounts.map(acc =>
+            `${acc.email},${acc.credentials?.refreshToken || ''}`
+          ).join('\n')
+        }
         return accounts.map(acc =>
-          `${acc.email},${acc.credentials?.refreshToken || ''}`
+          `${acc.email}${acc.nickname ? ` (${acc.nickname})` : ''} - ${acc.subscription?.title || '未知订阅'}`
         ).join('\n')
-      }
-      return accounts.map(acc =>
-        `${acc.email}${acc.nickname ? ` (${acc.nickname})` : ''} - ${acc.subscription?.title || '未知订阅'}`
-      ).join('\n')
 
-    default:
-      return ''
+      default:
+        throw new Error('不支持的导出格式')
+    }
+  } catch (error) {
+    console.error('[导出] 生成内容失败:', error)
+    throw error
   }
 }

@@ -117,7 +117,7 @@ export function showAddAccountDialog(): void {
     "refreshToken": "aaa",
     "provider": "Github"
   }
-]' rows="10"></textarea>
+]' rows="6"></textarea>
             <p class="form-hint">
               格式：JSON 数组，每个对象包含 refreshToken（必填）、provider（BuilderId/Enterprise/Google/Github）、clientId、clientSecret、region（可选）
             </p>
@@ -228,15 +228,33 @@ export function showAddAccountDialog(): void {
       const clientSecret = (document.getElementById('client-secret') as HTMLInputElement)?.value.trim()
       const region = (document.getElementById('region') as HTMLInputElement)?.value
 
+      // 输入验证
       if (!refreshToken) {
         window.UI?.toast.error('请填写 Refresh Token')
         return
       }
 
-      // Social 登录不需要 clientId 和 clientSecret
-      if (currentLoginType !== 'Social' && (!clientId || !clientSecret)) {
-        window.UI?.toast.error('请填写所有必填项')
+      if (refreshToken.length < 10 || refreshToken.length > 10000) {
+        window.UI?.toast.error('Refresh Token 长度不合法')
         return
+      }
+
+      // Social 登录不需要 clientId 和 clientSecret
+      if (currentLoginType !== 'Social') {
+        if (!clientId || !clientSecret) {
+          window.UI?.toast.error('请填写所有必填项')
+          return
+        }
+
+        if (clientId.length < 10 || clientId.length > 500) {
+          window.UI?.toast.error('Client ID 长度不合法')
+          return
+        }
+
+        if (clientSecret.length < 10 || clientSecret.length > 500) {
+          window.UI?.toast.error('Client Secret 长度不合法')
+          return
+        }
       }
 
       submitBtn.disabled = true
@@ -340,6 +358,17 @@ export function showAddAccountDialog(): void {
       try {
         const parsed = JSON.parse(batchData)
         credentials = Array.isArray(parsed) ? parsed : [parsed]
+
+        // 限制批量导入数量
+        if (credentials.length > 100) {
+          window.UI?.toast.error('批量导入最多支持 100 个账号')
+          return
+        }
+
+        if (credentials.length === 0) {
+          window.UI?.toast.error('没有可导入的账号')
+          return
+        }
       } catch {
         window.UI?.toast.error('JSON 格式错误')
         return

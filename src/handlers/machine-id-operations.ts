@@ -12,6 +12,7 @@ import {
 // 存储当前机器码和权限状态
 let currentMachineId: string | null = null
 let hasAdminPrivilege: boolean | null = null
+let operationInProgress: boolean = false
 
 // 获取当前机器码
 export function getCurrentMachineId(): string | null {
@@ -33,10 +34,21 @@ export function setAdminPrivilege(privilege: boolean): void {
   hasAdminPrivilege = privilege
 }
 
+// 检查是否有操作正在进行
+export function isOperationInProgress(): boolean {
+  return operationInProgress
+}
+
+// 设置操作状态
+function setOperationInProgress(inProgress: boolean): void {
+  operationInProgress = inProgress
+}
+
 // 检查管理员权限
 export async function checkAdminPrivilege(): Promise<boolean> {
   try {
-    hasAdminPrivilege = await (window as any).__TAURI__.core.invoke('check_admin_privilege')
+    const result = await (window as any).__TAURI__.core.invoke('check_admin_privilege')
+    hasAdminPrivilege = result as boolean
     return hasAdminPrivilege
   } catch (error) {
     hasAdminPrivilege = false
@@ -67,6 +79,12 @@ export async function generateRandomMachineId(): Promise<string> {
 
 // 设置机器码
 export async function setMachineId(newMachineId: string): Promise<{ success: boolean; error?: string }> {
+  // 防止并发操作
+  if (operationInProgress) {
+    return { success: false, error: '操作正在进行中，请稍候' }
+  }
+
+  operationInProgress = true
   try {
     const result = await (window as any).__TAURI__.core.invoke('set_machine_id', {
       newMachineId: newMachineId
@@ -80,21 +98,31 @@ export async function setMachineId(newMachineId: string): Promise<{ success: boo
     }
   } catch (error) {
     return { success: false, error: '操作失败' }
+  } finally {
+    operationInProgress = false
   }
 }
 
 // 应用机器码到账户
 export async function applyMachineIdForAccount(accountId: string): Promise<boolean> {
   if (!hasAdminPrivilege) {
+    console.log('[机器码] 没有管理员权限，跳过')
+    return false
+  }
+
+  if (operationInProgress) {
+    console.log('[机器码] 操作正在进行中，跳过')
     return false
   }
   
   const config = loadConfig()
   
   if (!config.autoSwitchOnAccountChange) {
+    console.log('[机器码] 自动切换未启用，跳过')
     return false
   }
   
+  operationInProgress = true
   try {
     // 保存当前机器码作为备份
     if (currentMachineId) {
@@ -123,20 +151,29 @@ export async function applyMachineIdForAccount(accountId: string): Promise<boole
     
     // 检查是否与当前相同
     if (machineIdToApply === currentMachineId) {
+      console.log('[机器码] 机器码未改变，跳过')
       return true
     }
     
     // 应用机器码
-    const result = await setMachineId(machineIdToApply)
+    const result = await (window as any).__TAURI__.core.invoke('set_machine_id', {
+      newMachineId: machineIdToApply
+    })
     
     if (result.success) {
+      currentMachineId = machineIdToApply
       addHistoryEntry(machineIdToApply, 'auto_switch', accountId)
+      console.log('[机器码] 已应用:', machineIdToApply)
       return true
     } else {
+      console.error('[机器码] 应用失败:', result.error)
       return false
     }
   } catch (error) {
+    console.error('[机器码] 应用异常:', error)
     return false
+  } finally {
+    operationInProgress = false
   }
 }
 
@@ -144,6 +181,13 @@ export async function applyMachineIdForAccount(accountId: string): Promise<boole
 export function validateMachineId(machineId: string): { valid: boolean; error?: string } {
   if (!machineId) {
     return { valid: false, error: '请输入机器码' }
+  }
+
+  // 去除空格
+  machineId = machineId.trim()
+  
+  if (machineId.length < 10) {
+    return { valid: false, error: '机器码长度过短' }
   }
   
   if (machineId.length > 100) {
@@ -156,4 +200,24 @@ export function validateMachineId(machineId: string): { valid: boolean; error?: 
   }
   
   return { valid: true }
+}
+
+// 检查机器码是否重复
+export function checkDuplicateMachineId(machineId: string, excludeAccountId?: string): { isDuplicate: boolean; accountEmail?: string } {
+  const bindings = loadAccountBindings()
+  const accounts = (window as any).accountStore?.getAccounts() || []
+  
+  for (const [accountId, boundMachineId] of Object.entries(bindings)) {
+    if (accountId === excludeAccountId) continue
+    
+    if (boundMachineId === machineId.toLowerCase()) {
+      const account = accounts.find((a: any) => a.id === accountId)
+      return {
+        isDuplicate: true,
+        accountEmail: account?.email || '未知账号'
+      }
+    }
+  }
+  
+  return { isDuplicate: false }
 }

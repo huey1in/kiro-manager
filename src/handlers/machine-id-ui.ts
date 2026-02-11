@@ -19,7 +19,8 @@ import {
   generateRandomMachineId,
   setMachineId,
   validateMachineId,
-  fetchMachineId
+  fetchMachineId,
+  isOperationInProgress
 } from './machine-id-operations'
 
 // 更新当前机器码显示
@@ -127,6 +128,11 @@ export async function generateAndApplyRandomMachineId(): Promise<void> {
     window.UI?.toast.error('需要管理员权限')
     return
   }
+
+  if (isOperationInProgress()) {
+    window.UI?.toast.warning('操作正在进行中，请稍候')
+    return
+  }
   
   try {
     const currentMachineId = getCurrentMachineId()
@@ -160,6 +166,14 @@ export async function applyCustomMachineId(customMachineId: string): Promise<voi
     window.UI?.toast.error('需要管理员权限')
     return
   }
+
+  if (isOperationInProgress()) {
+    window.UI?.toast.warning('操作正在进行中，请稍候')
+    return
+  }
+  
+  // 去除空格
+  customMachineId = customMachineId.trim()
   
   const validation = validateMachineId(customMachineId)
   if (!validation.valid) {
@@ -170,7 +184,7 @@ export async function applyCustomMachineId(customMachineId: string): Promise<voi
   const currentMachineId = getCurrentMachineId()
   
   // 检查是否相同
-  if (customMachineId.toLowerCase() === currentMachineId) {
+  if (customMachineId.toLowerCase() === currentMachineId?.toLowerCase()) {
     window.UI?.toast.info('机器码未改变')
     return
   }
@@ -204,6 +218,11 @@ export async function restoreOriginalMachineId(): Promise<void> {
     window.UI?.toast.error('需要管理员权限')
     return
   }
+
+  if (isOperationInProgress()) {
+    window.UI?.toast.warning('操作正在进行中，请稍候')
+    return
+  }
   
   const originalMachineId = loadOriginalMachineId()
   if (!originalMachineId) {
@@ -212,7 +231,7 @@ export async function restoreOriginalMachineId(): Promise<void> {
   }
   
   const currentMachineId = getCurrentMachineId()
-  if (currentMachineId === originalMachineId) {
+  if (currentMachineId?.toLowerCase() === originalMachineId.toLowerCase()) {
     window.UI?.toast.info('当前已是备份的机器码')
     return
   }
@@ -436,6 +455,13 @@ export function openMachineIdHistory(): void {
 
 // 清空历史记录
 export function clearMachineIdHistory(): void {
+  const count = getHistoryCount()
+  if (count > 50) {
+    if (!confirm(`确定要清空 ${count} 条历史记录吗？`)) {
+      return
+    }
+  }
+  
   clearHistory()
   updateHistoryDescription()
   window.UI?.toast.success('已清空历史记录')

@@ -1,9 +1,29 @@
 import { autoRefreshService } from '../services/auto-refresh-service'
 import { accountStore } from '../store'
+import { proxyService } from '../services/proxy-service'
 
-export function renderSettingsView(): string {
+export async function renderSettingsView(): Promise<string> {
   const config = autoRefreshService.getConfig()
   const settings = accountStore.getSettings()
+  
+  // 加载代理配置
+  let proxyConfig: any = {
+    port: 5580,
+    host: '127.0.0.1',
+    logRequests: true,
+    maxRetries: 3,
+    enableOpenAI: true,
+    enableClaude: true
+  }
+  
+  try {
+    const status = await proxyService.getStatus()
+    if (status.config) {
+      proxyConfig = status.config
+    }
+  } catch (error) {
+    console.error('[设置] 加载代理配置失败:', error)
+  }
   
   // 格式化显示文本
   let intervalText = ''
@@ -162,8 +182,101 @@ export function renderSettingsView(): string {
                 </span>
               </label>
             </div>
+
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <div class="settings-item-label">单次最多刷新账号数</div>
+                <div class="settings-item-desc">限制每次检查时最多刷新的账号数量（1-100）</div>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <button class="ui-btn ui-btn-secondary ui-btn-sm" onclick="window.adjustMaxBatchSize(-5)" style="width: 32px; padding: 6px;">-</button>
+                <input type="number" id="max-batch-size-input" class="ui-input" value="${config.maxBatchSize}" min="1" max="100" style="width: 60px; padding: 6px 10px; text-align: center; -moz-appearance: textfield;" />
+                <button class="ui-btn ui-btn-secondary ui-btn-sm" onclick="window.adjustMaxBatchSize(5)" style="width: 32px; padding: 6px;">+</button>
+                <span style="color: var(--text-muted); font-size: 13px;">个</span>
+              </div>
+            </div>
+
+            <div class="settings-item">
+              <div class="settings-item-info">
+                <div class="settings-item-label">并发刷新数量</div>
+                <div class="settings-item-desc">同时刷新的账号数量，数值越大速度越快（1-10）</div>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <button class="ui-btn ui-btn-secondary ui-btn-sm" onclick="window.adjustConcurrency(-1)" style="width: 32px; padding: 6px;">-</button>
+                <input type="number" id="concurrency-input" class="ui-input" value="${config.concurrency}" min="1" max="10" style="width: 60px; padding: 6px 10px; text-align: center; -moz-appearance: textfield;" />
+                <button class="ui-btn ui-btn-secondary ui-btn-sm" onclick="window.adjustConcurrency(1)" style="width: 32px; padding: 6px;">+</button>
+                <span style="color: var(--text-muted); font-size: 13px;">个</span>
+              </div>
+            </div>
           </div>
         ` : ''}
+      </div>
+
+      <div class="settings-section">
+        <h3 class="settings-section-title">API 反代服务</h3>
+        
+        <div class="settings-item">
+          <div class="settings-item-info">
+            <div class="settings-item-label">监听端口</div>
+            <div class="settings-item-desc">代理服务器监听的端口号</div>
+          </div>
+          <input type="number" class="ui-input" id="proxy-port" value="${proxyConfig.port}" min="1024" max="65535" style="width: 120px; padding: 6px 10px;" />
+        </div>
+
+        <div class="settings-item">
+          <div class="settings-item-info">
+            <div class="settings-item-label">监听地址</div>
+            <div class="settings-item-desc">代理服务器监听的 IP 地址</div>
+          </div>
+          <input type="text" class="ui-input" id="proxy-host" value="${proxyConfig.host}" placeholder="127.0.0.1" style="width: 200px; padding: 6px 10px;" />
+        </div>
+
+        <div class="settings-item">
+          <div class="settings-item-info">
+            <div class="settings-item-label">记录请求日志</div>
+            <div class="settings-item-desc">记录所有 API 请求的详细信息</div>
+          </div>
+          <label class="ui-switch">
+            <input type="checkbox" id="log-requests" ${proxyConfig.logRequests ? 'checked' : ''}>
+            <span class="ui-switch-track">
+              <span class="ui-switch-thumb"></span>
+            </span>
+          </label>
+        </div>
+
+        <div class="settings-item">
+          <div class="settings-item-info">
+            <div class="settings-item-label">最大重试次数</div>
+            <div class="settings-item-desc">请求失败时的最大重试次数</div>
+          </div>
+          <input type="number" class="ui-input" id="max-retries" value="${proxyConfig.maxRetries || 3}" min="0" max="10" style="width: 100px; padding: 6px 10px;" />
+        </div>
+
+        <div class="settings-item">
+          <div class="settings-item-info">
+            <div class="settings-item-label">启用 OpenAI API</div>
+            <div class="settings-item-desc">启用 /v1/chat/completions 端点</div>
+          </div>
+          <label class="ui-switch">
+            <input type="checkbox" id="enable-openai" ${proxyConfig.enableOpenAI !== false ? 'checked' : ''}>
+            <span class="ui-switch-track">
+              <span class="ui-switch-thumb"></span>
+            </span>
+          </label>
+        </div>
+
+        <div class="settings-item">
+          <div class="settings-item-info">
+            <div class="settings-item-label">启用 Claude API</div>
+            <div class="settings-item-desc">启用 /v1/messages 端点</div>
+          </div>
+          <label class="ui-switch">
+            <input type="checkbox" id="enable-claude" ${proxyConfig.enableClaude !== false ? 'checked' : ''}>
+            <span class="ui-switch-track">
+              <span class="ui-switch-thumb"></span>
+            </span>
+          </label>
+        </div>
       </div>
 
       <div class="settings-section">
@@ -218,6 +331,65 @@ export function renderSettingsView(): string {
 }
 
 export function attachSettingsEvents(container: Element) {
+  // 代理配置保存函数
+  const saveProxyConfig = async () => {
+    try {
+      const status = await proxyService.getStatus()
+      if (!status.config) return
+      
+      const config = status.config
+      
+      const portInput = container.querySelector('#proxy-port') as HTMLInputElement
+      const hostInput = container.querySelector('#proxy-host') as HTMLInputElement
+      const logRequestsToggle = container.querySelector('#log-requests') as HTMLInputElement
+      const maxRetriesInput = container.querySelector('#max-retries') as HTMLInputElement
+      const enableOpenAIToggle = container.querySelector('#enable-openai') as HTMLInputElement
+      const enableClaudeToggle = container.querySelector('#enable-claude') as HTMLInputElement
+      
+      if (portInput) config.port = parseInt(portInput.value)
+      if (hostInput) config.host = hostInput.value
+      if (logRequestsToggle) config.logRequests = logRequestsToggle.checked
+      if (maxRetriesInput) config.maxRetries = parseInt(maxRetriesInput.value)
+      if (enableOpenAIToggle) config.enableOpenAI = enableOpenAIToggle.checked
+      if (enableClaudeToggle) config.enableClaude = enableClaudeToggle.checked
+      
+      await proxyService.updateConfig(config)
+    } catch (error) {
+      console.error('[设置] 保存代理配置失败:', error)
+    }
+  }
+  
+  // 代理配置事件绑定
+  const proxyPortInput = container.querySelector('#proxy-port') as HTMLInputElement
+  if (proxyPortInput) {
+    proxyPortInput.addEventListener('change', saveProxyConfig)
+  }
+  
+  const proxyHostInput = container.querySelector('#proxy-host') as HTMLInputElement
+  if (proxyHostInput) {
+    proxyHostInput.addEventListener('change', saveProxyConfig)
+  }
+  
+  const logRequestsToggle = container.querySelector('#log-requests') as HTMLInputElement
+  if (logRequestsToggle) {
+    logRequestsToggle.addEventListener('change', saveProxyConfig)
+  }
+  
+  const maxRetriesInput = container.querySelector('#max-retries') as HTMLInputElement
+  if (maxRetriesInput) {
+    maxRetriesInput.addEventListener('change', saveProxyConfig)
+  }
+  
+  const enableOpenAIToggle = container.querySelector('#enable-openai') as HTMLInputElement
+  if (enableOpenAIToggle) {
+    enableOpenAIToggle.addEventListener('change', saveProxyConfig)
+  }
+  
+  const enableClaudeToggle = container.querySelector('#enable-claude') as HTMLInputElement
+  if (enableClaudeToggle) {
+    enableClaudeToggle.addEventListener('change', saveProxyConfig)
+  }
+  
   // 初始化主题开关状态
   const themeSwitch = container.querySelector('#theme-switch') as HTMLInputElement
   if (themeSwitch) {
@@ -255,8 +427,10 @@ export function attachSettingsEvents(container: Element) {
       // 重新渲染设置页面以显示/隐藏子选项
       const contentArea = document.querySelector('#content-area')
       if (contentArea) {
-        contentArea.innerHTML = renderSettingsView()
-        attachSettingsEvents(contentArea)
+        renderSettingsView().then(html => {
+          contentArea.innerHTML = html
+          attachSettingsEvents(contentArea)
+        })
       }
       
       // 直接操作 DOM 更新侧边栏 Logo
@@ -320,8 +494,10 @@ export function attachSettingsEvents(container: Element) {
         // 重新渲染设置页面以显示预览
         const contentArea = document.querySelector('#content-area')
         if (contentArea) {
-          contentArea.innerHTML = renderSettingsView()
-          attachSettingsEvents(contentArea)
+          renderSettingsView().then(html => {
+            contentArea.innerHTML = html
+            attachSettingsEvents(contentArea)
+          })
         }
         
         window.UI?.toast.success('Logo已保存')
@@ -350,8 +526,10 @@ export function attachSettingsEvents(container: Element) {
       // 重新渲染设置页面
       const contentArea = document.querySelector('#content-area')
       if (contentArea) {
-        contentArea.innerHTML = renderSettingsView()
-        attachSettingsEvents(contentArea)
+        renderSettingsView().then(html => {
+          contentArea.innerHTML = html
+          attachSettingsEvents(contentArea)
+        })
       }
       
       window.UI?.toast.success('已恢复默认 Logo')
@@ -405,8 +583,10 @@ export function attachSettingsEvents(container: Element) {
       // 重新渲染设置页面以显示/隐藏子选项
       const contentArea = document.querySelector('#content-area')
       if (contentArea) {
-        contentArea.innerHTML = renderSettingsView()
-        attachSettingsEvents(contentArea)
+        renderSettingsView().then(html => {
+          contentArea.innerHTML = html
+          attachSettingsEvents(contentArea)
+        })
       }
     })
   }
@@ -430,6 +610,63 @@ export function attachSettingsEvents(container: Element) {
     syncInfoSwitch.addEventListener('change', () => {
       autoRefreshService.setSyncInfo(syncInfoSwitch.checked)
     })
+  }
+
+  // 单次最多刷新账号数
+  const maxBatchSizeInput = container.querySelector('#max-batch-size-input') as HTMLInputElement
+  if (maxBatchSizeInput) {
+    maxBatchSizeInput.addEventListener('change', () => {
+      const value = parseInt(maxBatchSizeInput.value)
+      if (value >= 1 && value <= 100) {
+        autoRefreshService.setMaxBatchSize(value)
+        window.UI?.toast.success('已保存')
+      } else {
+        window.UI?.toast.error('数值必须在 1-100 之间')
+        const config = autoRefreshService.getConfig()
+        maxBatchSizeInput.value = String(config.maxBatchSize)
+      }
+    })
+  }
+
+  // 并发刷新数量
+  const concurrencyInput = container.querySelector('#concurrency-input') as HTMLInputElement
+  if (concurrencyInput) {
+    concurrencyInput.addEventListener('change', () => {
+      const value = parseInt(concurrencyInput.value)
+      if (value >= 1 && value <= 10) {
+        autoRefreshService.setConcurrency(value)
+        window.UI?.toast.success('已保存')
+      } else {
+        window.UI?.toast.error('数值必须在 1-10 之间')
+        const config = autoRefreshService.getConfig()
+        concurrencyInput.value = String(config.concurrency)
+      }
+    })
+  }
+
+  // 注册全局调整函数
+  (window as any).adjustMaxBatchSize = (delta: number) => {
+    const input = document.querySelector('#max-batch-size-input') as HTMLInputElement
+    if (!input) return
+    
+    const currentValue = parseInt(input.value)
+    const newValue = Math.max(1, Math.min(100, currentValue + delta))
+    input.value = String(newValue)
+    
+    autoRefreshService.setMaxBatchSize(newValue)
+    window.UI?.toast.success('已保存')
+  }
+
+  (window as any).adjustConcurrency = (delta: number) => {
+    const input = document.querySelector('#concurrency-input') as HTMLInputElement
+    if (!input) return
+    
+    const currentValue = parseInt(input.value)
+    const newValue = Math.max(1, Math.min(10, currentValue + delta))
+    input.value = String(newValue)
+    
+    autoRefreshService.setConcurrency(newValue)
+    window.UI?.toast.success('已保存')
   }
 
   // 机器码自动化配置

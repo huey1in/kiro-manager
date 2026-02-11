@@ -31,10 +31,11 @@ export async function autoImportCurrentAccount(
       console.log('[自动导入] 账号已存在,正在刷新:', existingAccount.email)
       await refreshAccount(existingAccount)
       
-      // 刷新后将新的 accessToken 写入本地缓存
+      // 刷新后获取更新的账号并同步到本地缓存
       const updatedAccount = accountStore.getAccounts().find(a => a.id === existingAccount.id)
       if (updatedAccount) {
-        await (window as any).__TAURI__.core.invoke('switch_account', {
+        console.log('[自动导入] 刷新成功，同步新 token 到本地缓存')
+        const syncResult = await (window as any).__TAURI__.core.invoke('switch_account', {
           accessToken: updatedAccount.credentials.accessToken,
           refreshToken: updatedAccount.credentials.refreshToken,
           clientId: updatedAccount.credentials.clientId || '',
@@ -44,9 +45,25 @@ export async function autoImportCurrentAccount(
           authMethod: updatedAccount.credentials.authMethod || 'IdC',
           provider: updatedAccount.credentials.provider || updatedAccount.idp
         })
+        
+        // 如果后端返回了新 token，再次更新账号
+        if (syncResult.success && syncResult.access_token && syncResult.access_token !== updatedAccount.credentials.accessToken) {
+          console.log('[自动导入] 后端返回了新 token，再次更新账号')
+          const now = Date.now()
+          accountStore.updateAccount(updatedAccount.id, {
+            credentials: {
+              ...updatedAccount.credentials,
+              accessToken: syncResult.access_token,
+              refreshToken: syncResult.refresh_token || updatedAccount.credentials.refreshToken,
+              expiresAt: syncResult.expires_in ? now + syncResult.expires_in * 1000 : updatedAccount.credentials.expiresAt
+            }
+          })
+        }
       }
       
-      renderCurrentAccountFn(updatedAccount || existingAccount)
+      // 获取最终的账号状态
+      const finalAccount = accountStore.getAccounts().find(a => a.id === existingAccount.id)
+      renderCurrentAccountFn(finalAccount || existingAccount)
       
       // 导入后立即同步激活状态
       await accountStore.syncActiveAccountFromLocal()
@@ -148,28 +165,74 @@ export async function handleAccountAction(
   const account = accounts.find(a => a.id === accountId)
   if (!account) return
 
-  switch (action) {
-    case 'detail':
-      showAccountDetailDialog(account)
-      break
-    case 'models':
-      showModelsDialog(account)
-      break
-    case 'switch':
-      await switchToAccount(account)
-      break
-    case 'refresh':
-      await refreshAccount(account)
-      break
-    case 'copy':
-      navigator.clipboard.writeText(JSON.stringify(account.credentials, null, 2))
-      window.UI?.toast.success('凭证已复制到剪贴板')
-      break
-    case 'edit':
-      showEditAccountDialog(account)
-      break
-    case 'delete':
-      deleteAccount(accountId, (id) => selectedIds.delete(id))
-      break
+  try {
+    switch (action) {
+      case 'detail':
+        showAccountDetailDialog(account)
+        break
+      case 'models':
+        showModelsDialog(account)
+        break
+      case 'switch':
+        await switchToAccount(account)
+        break
+      case 'refresh':
+        await refreshAccount(account)
+        
+        // 刷新成功后，如果是当前激活账号，同步新 token 到本地缓存
+        const activeAccountId = accountStore.getActiveAccountId()
+        if (activeAccountId === accountId) {
+          console.log('[账号操作] 刷新的是当前激活账号，同步新 token 到本地缓存')
+          const updatedAccount = accountStore.getAccounts().find(a => a.id === accountId)
+          if (updatedAccount) {
+            try {
+              const syncResult = await (window as any).__TAURI__.core.invoke('switch_account', {
+                accessToken: updatedAccount.credentials.accessToken,
+                refreshToken: updatedAccount.credentials.refreshToken,
+                clientId: updatedAccount.credentials.clientId || '',
+                clientSecret: updatedAccount.credentials.clientSecret || '',
+                region: updatedAccount.credentials.region || 'us-east-1',
+                startUrl: updatedAccount.credentials.startUrl,
+                authMethod: updatedAccount.credentials.authMethod || 'IdC',
+                provider: updatedAccount.credentials.provider || updatedAccount.idp
+              })
+              
+              // 如果后端返回了新 token，再次更新账号
+              if (syncResult.success && syncResult.access_token && syncResult.access_token !== updatedAccount.credentials.accessToken) {
+                console.log('[账号操作] 后端返回了新 token，再次更新账号')
+                const now = Date.now()
+                accountStore.updateAccount(updatedAccount.id, {
+                  credentials: {
+                    ...updatedAccount.credentials,
+                    accessToken: syncResult.access_token,
+                    refreshToken: syncResult.refresh_token || updatedAccount.credentials.refreshToken,
+                    expiresAt: syncResult.expires_in ? now + syncResult.expires_in * 1000 : updatedAccount.credentials.expiresAt
+                  }
+                })
+              }
+            } catch (syncError) {
+              console.error('[账号操作] 同步 token 到本地缓存失败:', syncError)
+            }
+          }
+        }
+        
+        window.UI?.toast.success('账号刷新成功')
+        break
+      case 'copy':
+        navigator.clipboard.writeText(JSON.stringify(account.credentials, null, 2))
+        window.UI?.toast.success('凭证已复制到剪贴板')
+        break
+      case 'edit':
+        showEditAccountDialog(account)
+        break
+      case 'delete':
+        deleteAccount(accountId, (id) => selectedIds.delete(id))
+        break
+    }
+  } catch (error) {
+    // 只在刷新操作时显示错误提示
+    if (action === 'refresh') {
+      window.UI?.toast.error('刷新失败: ' + (error as Error).message)
+    }
   }
 }

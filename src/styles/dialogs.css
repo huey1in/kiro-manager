@@ -244,6 +244,9 @@
 /* 模态框表单样式 */
 .modal-form {
   max-width: 600px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 8px;
 }
 
 .form-section {
@@ -287,9 +290,11 @@
 }
 
 .form-textarea {
-  resize: none;
-  min-height: 80px;
+  resize: vertical;
+  min-height: 120px;
+  max-height: 300px;
   font-family: monospace;
+  overflow-y: auto;
 }
 
 .form-hint {
@@ -329,20 +334,29 @@
 
 .import-result {
   margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 .result-box {
   background: var(--slate-50);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 12px;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .result-title {
   font-size: 13px;
   font-weight: 700;
   color: var(--text-main);
-  margin-bottom: 6px;
+  margin: 0;
+  padding: 8px 12px;
+  position: sticky;
+  top: 0;
+  background: var(--slate-50);
+  z-index: 1;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .result-text {
@@ -351,6 +365,8 @@
   white-space: pre-wrap;
   line-height: 1.5;
   margin: 0;
+  padding: 8px 12px;
+  word-break: break-word;
 }
 
 /* 登录类型和 Provider 切换按钮 */
