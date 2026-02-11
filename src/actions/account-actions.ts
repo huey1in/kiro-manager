@@ -80,7 +80,7 @@ export async function refreshAccount(account: Account): Promise<void> {
 }
 
 /**
- * 只刷新 Token（不更新账户信息）
+ * 只刷新 Token（不更新账号信息）
  */
 export async function refreshTokenOnly(account: Account): Promise<void> {
   if (!account.credentials.refreshToken || !account.credentials.clientId || !account.credentials.clientSecret) {

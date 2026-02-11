@@ -83,7 +83,7 @@ export function updateAccountBindingDescription(): void {
   const bindingDesc = document.getElementById('account-binding-desc')
   if (bindingDesc) {
     const count = getBindingCount()
-    bindingDesc.textContent = count > 0 ? `查看和管理每个账户绑定的机器码（已绑定 ${count} 个账户）` : '查看和管理每个账户绑定的机器码'
+    bindingDesc.textContent = count > 0 ? `查看和管理每个账号绑定的机器码（已绑定 ${count} 个账号）` : '查看和管理每个账号绑定的机器码'
   }
 }
 
@@ -249,7 +249,7 @@ export function openAccountBindingManager(): void {
   let html = `
     <div style="max-height: 300px; overflow-y: auto;">
       <div style="margin-bottom: 16px;">
-        <input type="text" id="binding-search" class="ui-input" placeholder="搜索账户..." style="width: 100%;" />
+        <input type="text" id="binding-search" class="ui-input" placeholder="搜索账号..." style="width: 100%;" />
       </div>
       <div id="binding-list">
   `
@@ -284,7 +284,7 @@ export function openAccountBindingManager(): void {
   `
   
   window.UI?.modal.open({
-    title: '账户机器码管理',
+    title: '账号机器码管理',
     html: html,
     size: 'lg',
     closable: true
@@ -394,7 +394,7 @@ export function openMachineIdHistory(): void {
         'manual': '手动修改',
         'auto_switch': '自动切换',
         'restore': '恢复备份',
-        'bind': '绑定账户'
+        'bind': '绑定账号'
       }[entry.action]
       
       const date = new Date(entry.timestamp)

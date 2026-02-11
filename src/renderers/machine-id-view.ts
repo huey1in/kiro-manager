@@ -111,8 +111,8 @@ export function renderMachineIdView(): string {
         
         <div class="settings-item">
           <div class="settings-item-info">
-            <div class="settings-item-label">账户机器码管理</div>
-            <div class="settings-item-desc" id="account-binding-desc">查看和管理每个账户绑定的机器码</div>
+            <div class="settings-item-label">账号机器码管理</div>
+            <div class="settings-item-desc" id="account-binding-desc">查看和管理每个账号绑定的机器码</div>
           </div>
           <button class="ui-btn ui-btn-secondary ui-btn-sm" onclick="window.openAccountBindingManager()">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" style="margin-right: 4px;">

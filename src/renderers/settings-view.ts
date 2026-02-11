@@ -110,7 +110,7 @@ export function renderSettingsView(): string {
         <div class="settings-item">
           <div class="settings-item-info">
             <div class="settings-item-label">启用自动刷新</div>
-            <div class="settings-item-desc">Token 过期前自动刷新，并同步更新账户信息</div>
+            <div class="settings-item-desc">Token 过期前自动刷新，并同步更新账号信息</div>
           </div>
           <label class="ui-switch">
             <input type="checkbox" id="auto-refresh-switch" ${config.enabled ? 'checked' : ''}>
@@ -124,14 +124,14 @@ export function renderSettingsView(): string {
           <div class="settings-subsection">
             <div class="settings-info-box">
               <p>• Token 即将过期时自动刷新，保持登录状态</p>
-              <p>• Token 刷新后自动更新账户用量、订阅等信息</p>
-              <p>• 开启自动换号时，会定期检查所有账户余额</p>
+              <p>• Token 刷新后自动更新账号用量、订阅等信息</p>
+              <p>• 开启自动换号时，会定期检查所有账号余额</p>
             </div>
 
             <div class="settings-item">
               <div class="settings-item-info">
                 <div class="settings-item-label">检查间隔</div>
-                <div class="settings-item-desc">每隔多久检查一次账户状态</div>
+                <div class="settings-item-desc">每隔多久检查一次账号状态</div>
               </div>
               <div class="ui-dropdown" style="width: 120px;">
                 <button class="ui-btn ui-btn-secondary" data-dropdown style="width: 100%; justify-content: space-between;">
@@ -152,7 +152,7 @@ export function renderSettingsView(): string {
 
             <div class="settings-item">
               <div class="settings-item-info">
-                <div class="settings-item-label">同步账户信息</div>
+                <div class="settings-item-label">同步账号信息</div>
                 <div class="settings-item-desc">刷新 Token 时同步检测用量、订阅、封禁状态</div>
               </div>
               <label class="ui-switch">
@@ -187,8 +187,8 @@ export function renderSettingsView(): string {
         <div class="settings-subsection" id="machine-id-binding-subsection" style="display: none;">
           <div class="settings-item">
             <div class="settings-item-info">
-              <div class="settings-item-label">账户机器码绑定</div>
-              <div class="settings-item-desc" id="binding-count-desc">为每个账户分配唯一的机器码，切换时自动使用</div>
+              <div class="settings-item-label">账号机器码绑定</div>
+              <div class="settings-item-desc" id="binding-count-desc">为每个账号分配唯一的机器码，切换时自动使用</div>
             </div>
             <label class="ui-switch">
               <input type="checkbox" id="bind-machine-id">
@@ -476,9 +476,9 @@ function initMachineIdSettings(container: Element) {
       updateMachineIdSettingsUI(config, bindings)
       
       if (config.bindMachineIdToAccount) {
-        window.UI?.toast.success('已开启账户机器码绑定')
+        window.UI?.toast.success('已开启账号机器码绑定')
       } else {
-        window.UI?.toast.info('已关闭账户机器码绑定')
+        window.UI?.toast.info('已关闭账号机器码绑定')
       }
     })
   }
@@ -516,9 +516,9 @@ function updateMachineIdSettingsUI(config: any, bindings: any) {
   if (bindingCountDesc) {
     const bindingCount = Object.keys(bindings).length
     if (bindingCount > 0) {
-      bindingCountDesc.textContent = `为每个账户分配唯一的机器码，切换时自动使用（已绑定 ${bindingCount} 个账户）`
+      bindingCountDesc.textContent = `为每个账号分配唯一的机器码，切换时自动使用（已绑定 ${bindingCount} 个账号）`
     } else {
-      bindingCountDesc.textContent = `为每个账户分配唯一的机器码，切换时自动使用`
+      bindingCountDesc.textContent = `为每个账号分配唯一的机器码，切换时自动使用`
     }
   }
 }

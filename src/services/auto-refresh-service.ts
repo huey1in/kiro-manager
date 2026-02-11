@@ -6,7 +6,7 @@ import { refreshAccount, refreshTokenOnly } from '../actions/account-actions'
 interface AutoRefreshConfig {
   enabled: boolean
   interval: number // 分钟
-  syncInfo: boolean // 是否同步更新账户信息
+  syncInfo: boolean // 是否同步更新账号信息
 }
 
 class AutoRefreshService {
@@ -68,10 +68,10 @@ class AutoRefreshService {
   }
 
   /**
-   * 设置是否同步账户信息
+   * 设置是否同步账号信息
    */
   setSyncInfo(enabled: boolean) {
-    console.log(`[自动刷新] 设置同步账户信息: ${enabled}`)
+    console.log(`[自动刷新] 设置同步账号信息: ${enabled}`)
     this.config.syncInfo = enabled
     this.saveConfig()
   }
@@ -127,7 +127,7 @@ class AutoRefreshService {
 
     const intervalMs = this.config.interval * 60 * 1000
     console.log(`[自动刷新] 检查间隔: ${this.config.interval} 分钟 (${intervalMs}ms)`)
-    console.log(`[自动刷新] 同步账户信息: ${this.config.syncInfo ? '是' : '否'}`)
+    console.log(`[自动刷新] 同步账号信息: ${this.config.syncInfo ? '是' : '否'}`)
 
     // 立即执行一次
     console.log('[自动刷新] 立即执行首次检查')
