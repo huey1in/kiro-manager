@@ -14,36 +14,28 @@ pub struct MachineIdResult {
 // 获取当前机器码
 #[tauri::command]
 pub async fn get_current_machine_id() -> Result<MachineIdResult, String> {
-    println!("[机器码] 开始获取当前机器码");
-    
     // 方法1: 使用 winreg 读取注册表
     match get_machine_id_from_registry() {
         Ok(machine_id) => {
-            println!("[机器码] 成功获取: {}", machine_id);
             return Ok(MachineIdResult {
                 success: true,
                 machine_id: Some(machine_id),
                 error: None,
             });
         }
-        Err(e) => {
-            println!("[机器码] 注册表读取失败: {}", e);
-        }
+        Err(_) => {}
     }
     
     // 方法2: 使用 reg query 命令
     match get_machine_id_from_command() {
         Ok(machine_id) => {
-            println!("[机器码] 通过命令获取成功: {}", machine_id);
             return Ok(MachineIdResult {
                 success: true,
                 machine_id: Some(machine_id),
                 error: None,
             });
         }
-        Err(e) => {
-            println!("[机器码] 命令获取失败: {}", e);
-        }
+        Err(_) => {}
     }
     
     Ok(MachineIdResult {
@@ -56,9 +48,25 @@ pub async fn get_current_machine_id() -> Result<MachineIdResult, String> {
 // 设置新机器码
 #[tauri::command]
 pub async fn set_machine_id(new_machine_id: String) -> Result<MachineIdResult, String> {
-    println!("[机器码] 开始设置新机器码: {}", new_machine_id);
+    // 1. 首先检查管理员权限
+    if !check_admin_privilege_internal() {
+        return Ok(MachineIdResult {
+            success: false,
+            machine_id: None,
+            error: Some("需要管理员权限".to_string()),
+        });
+    }
     
-    // 验证格式
+    // 2. 验证长度
+    if new_machine_id.len() > 100 {
+        return Ok(MachineIdResult {
+            success: false,
+            machine_id: None,
+            error: Some("机器码长度超出限制".to_string()),
+        });
+    }
+    
+    // 3. 验证格式
     if !is_valid_machine_id(&new_machine_id) {
         return Ok(MachineIdResult {
             success: false,
@@ -67,43 +75,39 @@ pub async fn set_machine_id(new_machine_id: String) -> Result<MachineIdResult, S
         });
     }
     
-    // 尝试使用 winreg 写入
+    // 4. 尝试写入注册表
     match set_machine_id_to_registry(&new_machine_id) {
         Ok(_) => {
-            println!("[机器码] 设置成功");
-            return Ok(MachineIdResult {
+            Ok(MachineIdResult {
                 success: true,
                 machine_id: Some(new_machine_id),
                 error: None,
-            });
+            })
         }
-        Err(e) => {
-            println!("[机器码] 设置失败: {}", e);
-            let error_msg = if e.to_string().contains("Access is denied") || e.to_string().contains("拒绝访问") {
-                "需要管理员权限".to_string()
-            } else {
-                format!("设置失败: {}", e)
-            };
-            
-            return Ok(MachineIdResult {
+        Err(_) => {
+            Ok(MachineIdResult {
                 success: false,
                 machine_id: None,
-                error: Some(error_msg),
-            });
+                error: Some("设置失败".to_string()),
+            })
         }
+    }
+}
+
+// 内部权限检查函数
+fn check_admin_privilege_internal() -> bool {
+    match RegKey::predef(HKEY_LOCAL_MACHINE)
+        .open_subkey_with_flags("SOFTWARE\\Microsoft\\Cryptography", KEY_WRITE)
+    {
+        Ok(_) => true,
+        Err(_) => false,
     }
 }
 
 // 检查是否有管理员权限
 #[tauri::command]
 pub async fn check_admin_privilege() -> Result<bool, String> {
-    // 尝试打开需要管理员权限的注册表键
-    match RegKey::predef(HKEY_LOCAL_MACHINE)
-        .open_subkey_with_flags("SOFTWARE\\Microsoft\\Cryptography", KEY_WRITE)
-    {
-        Ok(_) => Ok(true),
-        Err(_) => Ok(false),
-    }
+    Ok(check_admin_privilege_internal())
 }
 
 // 生成随机机器码
@@ -117,11 +121,11 @@ fn get_machine_id_from_registry() -> Result<String, String> {
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
     let key = hklm
         .open_subkey("SOFTWARE\\Microsoft\\Cryptography")
-        .map_err(|e| format!("打开注册表键失败: {}", e))?;
+        .map_err(|_| "读取失败".to_string())?;
     
     let machine_guid: String = key
         .get_value("MachineGuid")
-        .map_err(|e| format!("读取 MachineGuid 失败: {}", e))?;
+        .map_err(|_| "读取失败".to_string())?;
     
     Ok(machine_guid.to_lowercase())
 }
@@ -136,7 +140,7 @@ fn get_machine_id_from_command() -> Result<String, String> {
             "MachineGuid",
         ])
         .output()
-        .map_err(|e| format!("执行命令失败: {}", e))?;
+        .map_err(|_| "执行失败".to_string())?;
     
     let stdout = String::from_utf8_lossy(&output.stdout);
     
@@ -150,7 +154,7 @@ fn get_machine_id_from_command() -> Result<String, String> {
         }
     }
     
-    Err("无法从命令输出中解析机器码".to_string())
+    Err("解析失败".to_string())
 }
 
 // 写入注册表
@@ -158,16 +162,21 @@ fn set_machine_id_to_registry(new_machine_id: &str) -> Result<(), String> {
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
     let key = hklm
         .open_subkey_with_flags("SOFTWARE\\Microsoft\\Cryptography", KEY_WRITE)
-        .map_err(|e| format!("打开注册表键失败: {}", e))?;
+        .map_err(|_| "打开失败".to_string())?;
     
     key.set_value("MachineGuid", &new_machine_id)
-        .map_err(|e| format!("写入 MachineGuid 失败: {}", e))?;
+        .map_err(|_| "写入失败".to_string())?;
     
     Ok(())
 }
 
 // 验证机器码格式
 fn is_valid_machine_id(machine_id: &str) -> bool {
+    // 检查长度
+    if machine_id.len() > 100 {
+        return false;
+    }
+    
     // UUID 格式: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     let parts: Vec<&str> = machine_id.split('-').collect();
     if parts.len() != 5 {

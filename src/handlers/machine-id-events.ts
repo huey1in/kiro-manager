@@ -111,8 +111,6 @@ function updateAccountBindingDescription() {
 
 // 初始化机器码页面
 export async function initMachineIdPage() {
-  console.log('[机器码] 初始化页面')
-  
   // 加载历史记录和绑定
   loadHistory()
   loadAccountBindings()
@@ -132,14 +130,12 @@ export async function initMachineIdPage() {
 async function checkAdminPrivilege() {
   try {
     hasAdminPrivilege = await (window as any).__TAURI__.core.invoke('check_admin_privilege')
-    console.log('[机器码] 管理员权限:', hasAdminPrivilege)
     
     const warningEl = document.getElementById('admin-warning')
     if (warningEl) {
       warningEl.style.display = hasAdminPrivilege ? 'none' : 'flex'
     }
   } catch (error) {
-    console.error('[机器码] 检查管理员权限失败:', error)
     hasAdminPrivilege = false
   }
 }
@@ -149,7 +145,6 @@ async function loadMachineIds() {
   try {
     // 获取当前机器码
     const result = await (window as any).__TAURI__.core.invoke('get_current_machine_id')
-    console.log('[机器码] 获取结果:', result)
     
     if (result.success && result.machine_id) {
       currentMachineId = result.machine_id
@@ -161,7 +156,6 @@ async function loadMachineIds() {
     // 从本地存储加载原始机器码
     loadOriginalMachineId()
   } catch (error) {
-    console.error('[机器码] 加载失败:', error)
     updateCurrentMachineIdDisplay(null, '加载失败')
   }
 }
@@ -187,7 +181,7 @@ function loadOriginalMachineId() {
       updateOriginalMachineIdDisplay(originalMachineId)
     }
   } catch (error) {
-    console.error('[机器码] 加载原始机器码失败:', error)
+    // 静默失败
   }
 }
 
@@ -196,9 +190,8 @@ function saveOriginalMachineId(machineId: string) {
   try {
     localStorage.setItem('original_machine_id', machineId)
     originalMachineId = machineId
-    console.log('[机器码] 已保存原始机器码')
   } catch (error) {
-    console.error('[机器码] 保存原始机器码失败:', error)
+    // 静默失败
   }
 }
 
@@ -250,14 +243,12 @@ function updateRestoreButtonState() {
     await navigator.clipboard.writeText(machineId)
     window.UI?.toast.success('已复制到剪贴板')
   } catch (error) {
-    console.error('[机器码] 复制失败:', error)
     window.UI?.toast.error('复制失败')
   }
 }
 
 // 刷新机器码
 ;(window as any).refreshMachineId = async () => {
-  console.log('[机器码] 刷新机器码')
   await loadMachineIds()
   window.UI?.toast.success('已刷新')
 }
@@ -278,7 +269,6 @@ function updateRestoreButtonState() {
     
     // 生成随机机器码
     const newMachineId = await (window as any).__TAURI__.core.invoke('generate_random_machine_id')
-    console.log('[机器码] 生成随机机器码:', newMachineId)
     
     // 应用新机器码
     const result = await (window as any).__TAURI__.core.invoke('set_machine_id', {
@@ -298,7 +288,6 @@ function updateRestoreButtonState() {
       window.UI?.toast.error(result.error || '设置失败')
     }
   } catch (error) {
-    console.error('[机器码] 随机生成失败:', error)
     window.UI?.toast.error('操作失败')
   }
 }
@@ -319,10 +308,22 @@ function updateRestoreButtonState() {
     return
   }
   
+  // 验证长度
+  if (customMachineId.length > 100) {
+    window.UI?.toast.error('机器码长度超出限制')
+    return
+  }
+  
   // 验证格式
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
   if (!uuidPattern.test(customMachineId)) {
     window.UI?.toast.error('无效的 UUID 格式')
+    return
+  }
+  
+  // 检查是否与当前机器码相同
+  if (customMachineId.toLowerCase() === currentMachineId) {
+    window.UI?.toast.info('机器码未改变')
     return
   }
   
@@ -352,7 +353,6 @@ function updateRestoreButtonState() {
       window.UI?.toast.error(result.error || '设置失败')
     }
   } catch (error) {
-    console.error('[机器码] 应用自定义机器码失败:', error)
     window.UI?.toast.error('操作失败')
   }
 }
@@ -402,7 +402,6 @@ function updateRestoreButtonState() {
       window.UI?.toast.error(result.error || '恢复失败')
     }
   } catch (error) {
-    console.error('[机器码] 恢复备份机器码失败:', error)
     window.UI?.toast.error('操作失败')
   }
 }
@@ -657,14 +656,12 @@ export function setAccountMachineId(accountId: string, machineId: string) {
 
 export async function applyMachineIdForAccount(accountId: string): Promise<boolean> {
   if (!hasAdminPrivilege) {
-    console.log('[机器码] 没有管理员权限，跳过应用')
     return false
   }
   
   const config = loadConfig()
   
   if (!config.autoSwitchOnAccountChange) {
-    console.log('[机器码] 自动更换功能未开启')
     return false
   }
   
@@ -672,7 +669,6 @@ export async function applyMachineIdForAccount(accountId: string): Promise<boole
     // 保存当前机器码作为备份（如果存在）
     if (currentMachineId) {
       saveOriginalMachineId(currentMachineId)
-      console.log('[机器码] 已保存当前机器码作为备份')
     }
     
     let machineIdToApply: string
@@ -687,18 +683,20 @@ export async function applyMachineIdForAccount(accountId: string): Promise<boole
         boundMachineId = await (window as any).__TAURI__.core.invoke('generate_random_machine_id')
         accountMachineIdBindings[accountId] = boundMachineId
         saveAccountBindings()
-        console.log('[机器码] 为账户生成新的绑定机器码')
         
         // 添加绑定历史记录
         addHistoryEntry(boundMachineId, 'bind', accountId)
       }
       
       machineIdToApply = boundMachineId
-      console.log('[机器码] 使用绑定的机器码')
     } else {
       // 随机生成新机器码
       machineIdToApply = await (window as any).__TAURI__.core.invoke('generate_random_machine_id')
-      console.log('[机器码] 生成随机机器码')
+    }
+    
+    // 检查是否与当前机器码相同
+    if (machineIdToApply === currentMachineId) {
+      return true
     }
     
     // 应用机器码
@@ -707,7 +705,6 @@ export async function applyMachineIdForAccount(accountId: string): Promise<boole
     })
     
     if (result.success) {
-      console.log('[机器码] 成功应用机器码:', machineIdToApply)
       currentMachineId = machineIdToApply
       
       // 添加自动切换历史记录
@@ -715,11 +712,9 @@ export async function applyMachineIdForAccount(accountId: string): Promise<boole
       
       return true
     } else {
-      console.error('[机器码] 应用失败:', result.error)
       return false
     }
   } catch (error) {
-    console.error('[机器码] 应用机器码异常:', error)
     return false
   }
 }
