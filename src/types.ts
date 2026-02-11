@@ -25,6 +25,7 @@ export interface AccountCredentials {
   expiresAt: number
   authMethod?: 'IdC' | 'social'
   provider?: string
+  startUrl?: string
 }
 
 export interface BonusData {

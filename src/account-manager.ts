@@ -12,9 +12,7 @@ import { attachAccountCardEvents } from './handlers/account-card-events'
 import { toggleSelection, updateSelectionUI } from './managers/selection-manager'
 import { updateAccountList } from './managers/filter-manager'
 import {
-  checkAndUpdateCurrentAccount,
   autoImportCurrentAccount,
-  updateCurrentAccountIfMatch,
   handleAccountAction
 } from './services/account-service'
 import { autoRefreshService } from './services/auto-refresh-service'
@@ -297,8 +295,7 @@ export class AccountManager {
     await handleAccountAction(
       accountId,
       action,
-      this.selectedIds,
-      (accountId) => this.updateCurrentAccountIfMatch(accountId)
+      this.selectedIds
     )
   }
 
