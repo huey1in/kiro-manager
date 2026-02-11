@@ -86,13 +86,19 @@
 
 .btn-icon:hover,
 .ui-btn-icon:hover {
-  background: #f1f5f9;
+  background: var(--slate-100);
   color: var(--primary);
 }
 
 .btn-icon.delete:hover {
-  background: #fef2f2;
+  background: rgba(239, 68, 68, 0.1);
   color: var(--danger);
+}
+
+/* 暗色主题下的图标按钮 */
+html.dark .btn-icon.delete:hover,
+html.dark .ui-btn-icon.delete:hover {
+  background: rgba(239, 68, 68, 0.2);
 }
 
 /* 徽章样式 */

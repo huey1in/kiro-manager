@@ -1,7 +1,17 @@
 // 账号可用模型对话框
 import type { Account } from '../types'
 import { accountStore } from '../store'
-import autoIcon from '../assets/auto-icon.png'
+import awsIcon from '../assets/aws-color.svg'
+import chatglmIcon from '../assets/chatglm-color.svg'
+import claudeIcon from '../assets/claude-color.svg'
+import deepseekIcon from '../assets/deepseek-color.svg'
+import doubaoIcon from '../assets/doubao-color.svg'
+import geminiIcon from '../assets/gemini-color.svg'
+import grokIcon from '../assets/grok.svg'
+import ollamaIcon from '../assets/ollama.svg'
+import openaiIcon from '../assets/openai.svg'
+import qwenIcon from '../assets/qwen-color.svg'
+import minimaxIcon from '../assets/minimax-color.svg'
 
 interface Model {
   id: string
@@ -15,9 +25,6 @@ interface Model {
 }
 
 export function showModelsDialog(account: Account) {
-  const settings = accountStore.getSettings()
-  const displayEmail = accountStore.maskEmail(account.email)
-  
   window.UI?.modal.open({
     title: '可用模型',
     html: `
@@ -103,25 +110,49 @@ function getModelIcon(modelId: string, modelName: string): string {
   const id = modelId.toLowerCase()
   const name = modelName.toLowerCase()
   
-  // Auto 模型使用自定义图标
-  if (id.includes('auto') || name.includes('auto')) {
-    return `<img class="model-icon" src="${autoIcon}" alt="${modelName}" />`
+  // 根据模型 ID 或名称匹配对应的图标
+  if (id.includes('claude') || name.includes('claude') || name.includes('anthropic')) {
+    return `<img class="model-icon" src="${claudeIcon}" alt="${modelName}" />`
   }
   
-  // 根据模型 ID 或名称匹配品牌
-  let brand = 'openai' // 默认
-  let color = '412991' // OpenAI 紫色
-  
-  if (id.includes('claude') || name.includes('claude')) {
-    brand = 'claude'
-    color = 'D4A574'
-  } else if (id.includes('mistral')) {
-    brand = 'github' // Mistral 没有专门图标，用通用的
-    color = 'F2A73B'
+  if (id.includes('gpt') || id.includes('openai') || name.includes('openai')) {
+    return `<img class="model-icon" src="${openaiIcon}" alt="${modelName}" />`
   }
   
-  // 使用 Simple Icons CDN
-  return `<img class="model-icon" src="https://cdn.simpleicons.org/${brand}/${color}" alt="${modelName}" onerror="this.src='https://cdn.simpleicons.org/github/412991'" />`
+  if (id.includes('gemini') || name.includes('gemini') || name.includes('google')) {
+    return `<img class="model-icon" src="${geminiIcon}" alt="${modelName}" />`
+  }
+  
+  if (id.includes('deepseek') || name.includes('deepseek')) {
+    return `<img class="model-icon" src="${deepseekIcon}" alt="${modelName}" />`
+  }
+  
+  if (id.includes('qwen') || name.includes('qwen') || name.includes('通义')) {
+    return `<img class="model-icon" src="${qwenIcon}" alt="${modelName}" />`
+  }
+  
+  if (id.includes('chatglm') || name.includes('chatglm') || name.includes('智谱')) {
+    return `<img class="model-icon" src="${chatglmIcon}" alt="${modelName}" />`
+  }
+  
+  if (id.includes('doubao') || name.includes('doubao') || name.includes('豆包')) {
+    return `<img class="model-icon" src="${doubaoIcon}" alt="${modelName}" />`
+  }
+  
+  if (id.includes('grok') || name.includes('grok')) {
+    return `<img class="model-icon" src="${grokIcon}" alt="${modelName}" />`
+  }
+  
+  if (id.includes('ollama') || name.includes('ollama')) {
+    return `<img class="model-icon" src="${ollamaIcon}" alt="${modelName}" />`
+  }
+
+  if (id.includes('minimax') || name.includes('minimax')) {
+    return `<img class="model-icon" src="${minimaxIcon}" alt="${modelName}" />`
+  }
+  
+  // auto 和默认都使用 AWS 图标
+  return `<img class="model-icon" src="${awsIcon}" alt="${modelName}" />`
 }
 
 function renderModels(models: Model[]): string {
