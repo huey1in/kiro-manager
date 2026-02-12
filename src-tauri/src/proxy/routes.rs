@@ -15,17 +15,81 @@ pub fn health_route() -> impl Filter<Extract = impl warp::Reply, Error = warp::R
 /// 创建模型列表路由
 pub fn models_route(
     account_pool: Arc<AccountPool>,
+    config: Arc<tokio::sync::RwLock<ProxyConfig>>,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     warp::path!("v1" / "models")
         .and(warp::get())
+        .and(warp::header::optional::<String>("authorization"))
         .and(warp::any().map(move || account_pool.clone()))
+        .and(warp::any().map(move || config.clone()))
         .and_then(handle_models)
 }
 
 /// 处理模型列表请求
 async fn handle_models(
+    auth_header: Option<String>,
     pool: Arc<AccountPool>,
+    config: Arc<tokio::sync::RwLock<ProxyConfig>>,
 ) -> Result<impl warp::Reply, warp::Rejection> {
+    // 验证 API Key
+    let config_read = config.read().await;
+    let has_api_keys = config_read.api_keys.as_ref().map(|keys| !keys.is_empty()).unwrap_or(false);
+    
+    println!("[Models] Authorization 头: {:?}", auth_header);
+    println!("[Models] 是否配置了 API Keys: {}", has_api_keys);
+    
+    if has_api_keys {
+        let api_keys = config_read.api_keys.as_ref().unwrap();
+        
+        // 提取 Bearer Token
+        let provided_key = auth_header
+            .as_ref()
+            .and_then(|h| h.strip_prefix("Bearer "))
+            .map(|s| s.trim());
+        
+        println!("[Models] 提取的 API Key: {:?}", provided_key);
+        
+        if provided_key.is_none() {
+            drop(config_read);
+            return Ok(warp::reply::with_status(
+                warp::reply::json(&serde_json::json!({
+                    "error": {
+                        "message": "缺少 Authorization 头",
+                        "type": "invalid_request_error",
+                        "code": "missing_authorization"
+                    }
+                })),
+                warp::http::StatusCode::UNAUTHORIZED,
+            ));
+        }
+        
+        let provided_key = provided_key.unwrap();
+        
+        // 验证 API Key 是否有效且启用
+        let valid_key = api_keys.iter().find(|k| {
+            println!("[Models] 检查 API Key: {} (enabled: {})", k.key, k.enabled);
+            k.enabled && k.key == provided_key
+        });
+        
+        println!("[Models] 验证结果: {}", valid_key.is_some());
+        
+        if valid_key.is_none() {
+            drop(config_read);
+            return Ok(warp::reply::with_status(
+                warp::reply::json(&serde_json::json!({
+                    "error": {
+                        "message": "无效的 API Key",
+                        "type": "invalid_request_error",
+                        "code": "invalid_api_key"
+                    }
+                })),
+                warp::http::StatusCode::UNAUTHORIZED,
+            ));
+        }
+    }
+    
+    drop(config_read);
+    
     let accounts = pool.get_all_accounts();
     if accounts.is_empty() {
         return Ok(warp::reply::with_status(
@@ -91,6 +155,7 @@ pub fn chat_completions_route(
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     warp::path!("v1" / "chat" / "completions")
         .and(warp::post())
+        .and(warp::header::optional::<String>("authorization"))
         .and(warp::body::json())
         .and(warp::any().map(move || account_pool.clone()))
         .and(warp::any().map(move || stats.clone()))
@@ -102,6 +167,7 @@ pub fn chat_completions_route(
 
 /// 处理 OpenAI Chat Completions 请求
 async fn handle_chat_completions(
+    auth_header: Option<String>,
     body: serde_json::Value,
     pool: Arc<AccountPool>,
     stats_arc: Arc<Mutex<ProxyStats>>,
@@ -123,6 +189,62 @@ async fn handle_chat_completions(
             })),
             warp::http::StatusCode::FORBIDDEN,
         ));
+    }
+    
+    // 验证 API Key
+    let has_api_keys = config_read.api_keys.as_ref().map(|keys| !keys.is_empty()).unwrap_or(false);
+    
+    println!("[OpenAI] Authorization 头: {:?}", auth_header);
+    println!("[OpenAI] 是否配置了 API Keys: {}", has_api_keys);
+    
+    if has_api_keys {
+        let api_keys = config_read.api_keys.as_ref().unwrap();
+        
+        // 提取 Bearer Token
+        let provided_key = auth_header
+            .as_ref()
+            .and_then(|h| h.strip_prefix("Bearer "))
+            .map(|s| s.trim());
+        
+        println!("[OpenAI] 提取的 API Key: {:?}", provided_key);
+        
+        if provided_key.is_none() {
+            drop(config_read);
+            return Ok(warp::reply::with_status(
+                warp::reply::json(&serde_json::json!({
+                    "error": {
+                        "message": "缺少 Authorization 头",
+                        "type": "invalid_request_error",
+                        "code": "missing_authorization"
+                    }
+                })),
+                warp::http::StatusCode::UNAUTHORIZED,
+            ));
+        }
+        
+        let provided_key = provided_key.unwrap();
+        
+        // 验证 API Key 是否有效且启用
+        let valid_key = api_keys.iter().find(|k| {
+            println!("[OpenAI] 检查 API Key: {} (enabled: {})", k.key, k.enabled);
+            k.enabled && k.key == provided_key
+        });
+        
+        println!("[OpenAI] 验证结果: {}", valid_key.is_some());
+        
+        if valid_key.is_none() {
+            drop(config_read);
+            return Ok(warp::reply::with_status(
+                warp::reply::json(&serde_json::json!({
+                    "error": {
+                        "message": "无效的 API Key",
+                        "type": "invalid_request_error",
+                        "code": "invalid_api_key"
+                    }
+                })),
+                warp::http::StatusCode::UNAUTHORIZED,
+            ));
+        }
     }
     
     drop(config_read);
@@ -318,6 +440,7 @@ pub fn claude_messages_route(
         .or(warp::path("messages"))
         .unify()
         .and(warp::post())
+        .and(warp::header::optional::<String>("authorization"))
         .and(warp::body::json())
         .and(warp::any().map(move || account_pool.clone()))
         .and(warp::any().map(move || stats.clone()))
@@ -329,6 +452,7 @@ pub fn claude_messages_route(
 
 /// 处理 Claude Messages 请求
 async fn handle_claude_messages(
+    auth_header: Option<String>,
     body: serde_json::Value,
     pool: Arc<AccountPool>,
     stats_arc: Arc<Mutex<ProxyStats>>,
@@ -351,7 +475,62 @@ async fn handle_claude_messages(
         ));
     }
     
-    drop(config_read);
+    // 验证 API Key
+    let has_api_keys = config_read.api_keys.as_ref().map(|keys| !keys.is_empty()).unwrap_or(false);
+    
+    println!("[Claude] Authorization 头: {:?}", auth_header);
+    println!("[Claude] 是否配置了 API Keys: {}", has_api_keys);
+    
+    if has_api_keys {
+        let api_keys = config_read.api_keys.as_ref().unwrap();
+        
+        // 提取 Bearer Token 或 x-api-key
+        let provided_key = auth_header
+            .as_ref()
+            .and_then(|h| {
+                h.strip_prefix("Bearer ")
+                    .or_else(|| h.strip_prefix("x-api-key: "))
+            })
+            .map(|s| s.trim());
+        
+        println!("[Claude] 提取的 API Key: {:?}", provided_key);
+        
+        if provided_key.is_none() {
+            drop(config_read);
+            return Ok(warp::reply::with_status(
+                warp::reply::json(&serde_json::json!({
+                    "error": {
+                        "type": "invalid_request_error",
+                        "message": "缺少 Authorization 头"
+                    }
+                })),
+                warp::http::StatusCode::UNAUTHORIZED,
+            ));
+        }
+        
+        let provided_key = provided_key.unwrap();
+        
+        // 验证 API Key 是否有效且启用
+        let valid_key = api_keys.iter().find(|k| {
+            println!("[Claude] 检查 API Key: {} (enabled: {})", k.key, k.enabled);
+            k.enabled && k.key == provided_key
+        });
+        
+        println!("[Claude] 验证结果: {}", valid_key.is_some());
+        
+        if valid_key.is_none() {
+            drop(config_read);
+            return Ok(warp::reply::with_status(
+                warp::reply::json(&serde_json::json!({
+                    "error": {
+                        "type": "invalid_request_error",
+                        "message": "无效的 API Key"
+                    }
+                })),
+                warp::http::StatusCode::UNAUTHORIZED,
+            ));
+        }
+    }
     
     // 检查是否为流式请求
     let is_stream = body.get("stream")

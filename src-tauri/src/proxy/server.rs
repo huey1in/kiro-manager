@@ -83,7 +83,7 @@ impl ProxyServer {
             
             // 创建所有路由
             let health = routes::health_route();
-            let models = routes::models_route(account_pool.clone());
+            let models = routes::models_route(account_pool.clone(), config_arc.clone());
             let chat = routes::chat_completions_route(
                 account_pool.clone(),
                 stats.clone(),

@@ -7,6 +7,7 @@ mod switch;
 mod machine_id;
 mod kiro_settings;
 mod proxy;
+mod chat;
 
 use tauri::{Manager, PhysicalPosition};
 
@@ -91,7 +92,8 @@ pub fn run() {
             proxy::commands::get_proxy_accounts,
             proxy::commands::get_proxy_models,
             proxy::commands::get_proxy_logs,
-            proxy::commands::reset_proxy_stats
+            proxy::commands::reset_proxy_stats,
+            chat::send_chat_message
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -248,6 +248,8 @@ html.dark .ui-btn-icon.delete:hover {
   cursor: pointer;
   transition: background 0.2s;
   font-size: 14px;
+  display: flex;
+  align-items: center;
 }
 
 .ui-dropdown-item:hover {

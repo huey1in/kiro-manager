@@ -28,42 +28,40 @@ export async function autoImportCurrentAccount(
     )
 
     if (existingAccount) {
-      console.log('[自动导入] 账号已存在,正在刷新:', existingAccount.email)
-      await refreshAccount(existingAccount)
+      console.log('[自动导入] 账号已存在:', existingAccount.email)
       
-      // 刷新后获取更新的账号并同步到本地缓存
-      const updatedAccount = accountStore.getAccounts().find(a => a.id === existingAccount.id)
-      if (updatedAccount) {
-        console.log('[自动导入] 刷新成功，同步新 token 到本地缓存')
-        const syncResult = await (window as any).__TAURI__.core.invoke('switch_account', {
-          accessToken: updatedAccount.credentials.accessToken,
-          refreshToken: updatedAccount.credentials.refreshToken,
-          clientId: updatedAccount.credentials.clientId || '',
-          clientSecret: updatedAccount.credentials.clientSecret || '',
-          region: updatedAccount.credentials.region || 'us-east-1',
-          startUrl: updatedAccount.credentials.startUrl,
-          authMethod: updatedAccount.credentials.authMethod || 'IdC',
-          provider: updatedAccount.credentials.provider || updatedAccount.idp
-        })
+      // 检查 token 是否即将过期（小于5分钟）
+      const now = Date.now()
+      const expiresAt = existingAccount.credentials.expiresAt || 0
+      const needsRefresh = expiresAt - now < 5 * 60 * 1000
+      
+      if (needsRefresh) {
+        console.log('[自动导入] Token 即将过期，正在刷新')
+        await refreshAccount(existingAccount)
         
-        // 如果后端返回了新 token，再次更新账号
-        if (syncResult.success && syncResult.access_token && syncResult.access_token !== updatedAccount.credentials.accessToken) {
-          console.log('[自动导入] 后端返回了新 token，再次更新账号')
-          const now = Date.now()
-          accountStore.updateAccount(updatedAccount.id, {
-            credentials: {
-              ...updatedAccount.credentials,
-              accessToken: syncResult.access_token,
-              refreshToken: syncResult.refresh_token || updatedAccount.credentials.refreshToken,
-              expiresAt: syncResult.expires_in ? now + syncResult.expires_in * 1000 : updatedAccount.credentials.expiresAt
-            }
+        // 刷新后获取更新的账号并同步到本地缓存
+        const updatedAccount = accountStore.getAccounts().find(a => a.id === existingAccount.id)
+        if (updatedAccount) {
+          console.log('[自动导入] 刷新成功，同步新 token 到本地缓存')
+          await (window as any).__TAURI__.core.invoke('switch_account', {
+            accessToken: updatedAccount.credentials.accessToken,
+            refreshToken: updatedAccount.credentials.refreshToken,
+            clientId: updatedAccount.credentials.clientId || '',
+            clientSecret: updatedAccount.credentials.clientSecret || '',
+            region: updatedAccount.credentials.region || 'us-east-1',
+            startUrl: updatedAccount.credentials.startUrl,
+            authMethod: updatedAccount.credentials.authMethod || 'IdC',
+            provider: updatedAccount.credentials.provider || updatedAccount.idp
           })
         }
+        
+        // 获取最终的账号状态
+        const finalAccount = accountStore.getAccounts().find(a => a.id === existingAccount.id)
+        renderCurrentAccountFn(finalAccount || existingAccount)
+      } else {
+        console.log('[自动导入] Token 仍然有效，无需刷新')
+        renderCurrentAccountFn(existingAccount)
       }
-      
-      // 获取最终的账号状态
-      const finalAccount = accountStore.getAccounts().find(a => a.id === existingAccount.id)
-      renderCurrentAccountFn(finalAccount || existingAccount)
       
       // 导入后立即同步激活状态
       await accountStore.syncActiveAccountFromLocal()

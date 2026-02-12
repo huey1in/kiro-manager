@@ -156,28 +156,54 @@ export async function deleteAccount(accountId: string, onDelete?: (accountId: st
 
   // 检查是否为当前激活账号
   const activeAccountId = accountStore.getActiveAccountId()
-  if (activeAccountId === accountId) {
-    if (!confirm(`账号 ${account.email} 是当前激活账号，删除后需要重新登录。确定要删除吗？`)) {
-      return
-    }
-    // 先退出登录
-    try {
-      await (window as any).__TAURI__.core.invoke('logout_account')
-      await accountStore.syncActiveAccountFromLocal()
-    } catch (error) {
-      console.error('[删除账号] 退出登录失败:', error)
-    }
-  } else {
-    if (!confirm(`确定要删除账号 ${account.email} 吗？`)) {
-      return
-    }
+  const isActiveAccount = activeAccountId === accountId
+  
+  // 使用应用内模态框
+  const message = isActiveAccount
+    ? `账号 ${account.email} 是当前激活账号，删除后需要重新登录。确定要删除吗？`
+    : `确定要删除账号 ${account.email} 吗？`
+  
+  const modal = window.UI?.modal.open({
+    title: '确认删除',
+    html: `
+      <div style="padding: 24px;">
+        <p style="margin: 0; color: var(--text-main); font-size: 14px;">${message}</p>
+      </div>
+    `,
+    footer: `
+      <button class="ui-btn ui-btn-secondary" onclick="window.cancelDeleteAccount()">取消</button>
+      <button class="ui-btn ui-btn-danger" onclick="window.confirmDeleteAccount()">删除</button>
+    `
+  })
+  
+  // 注册全局函数
+  ;(window as any).cancelDeleteAccount = () => {
+    window.UI?.modal.close(modal)
+    delete (window as any).cancelDeleteAccount
+    delete (window as any).confirmDeleteAccount
   }
-
-  accountStore.deleteAccount(accountId)
-  if (onDelete) {
-    onDelete(accountId)
+  
+  ;(window as any).confirmDeleteAccount = async () => {
+    window.UI?.modal.close(modal)
+    delete (window as any).cancelDeleteAccount
+    delete (window as any).confirmDeleteAccount
+    
+    // 如果是激活账号，先退出登录
+    if (isActiveAccount) {
+      try {
+        await (window as any).__TAURI__.core.invoke('logout_account')
+        await accountStore.syncActiveAccountFromLocal()
+      } catch (error) {
+        console.error('[删除账号] 退出登录失败:', error)
+      }
+    }
+    
+    accountStore.deleteAccount(accountId)
+    if (onDelete) {
+      onDelete(accountId)
+    }
+    window.UI?.toast.success('账号已删除')
   }
-  window.UI?.toast.success('账号已删除')
 }
 
 /**
@@ -323,7 +349,34 @@ export function handleBatchDelete(selectedIds: Set<string>, onClear: () => void)
     return
   }
 
-  if (confirm(`确定要删除选中的 ${selectedCount} 个账号吗？此操作不可恢复。`)) {
+  // 使用应用内模态框
+  const modal = window.UI?.modal.open({
+    title: '确认批量删除',
+    html: `
+      <div style="padding: 24px;">
+        <p style="margin: 0; color: var(--text-main); font-size: 14px;">
+          确定要删除选中的 ${selectedCount} 个账号吗？此操作不可恢复。
+        </p>
+      </div>
+    `,
+    footer: `
+      <button class="ui-btn ui-btn-secondary" onclick="window.cancelBatchDelete()">取消</button>
+      <button class="ui-btn ui-btn-danger" onclick="window.confirmBatchDelete()">删除</button>
+    `
+  })
+  
+  // 注册全局函数
+  ;(window as any).cancelBatchDelete = () => {
+    window.UI?.modal.close(modal)
+    delete (window as any).cancelBatchDelete
+    delete (window as any).confirmBatchDelete
+  }
+  
+  ;(window as any).confirmBatchDelete = () => {
+    window.UI?.modal.close(modal)
+    delete (window as any).cancelBatchDelete
+    delete (window as any).confirmBatchDelete
+    
     selectedIds.forEach(id => {
       accountStore.deleteAccount(id)
     })

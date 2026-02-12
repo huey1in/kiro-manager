@@ -183,15 +183,21 @@ export class AccountManager {
               </svg>
               <span>机器码管理</span>
             </button>
-            <button class="sidebar-link" data-view="kiro-settings">
-              <img src="${kiroIconSvg}" alt="Kiro" class="sidebar-icon" style="width: 20px; height: 20px;" />
-              <span>Kiro 设置</span>
-            </button>
             <button class="sidebar-link" data-view="proxy">
               <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
               </svg>
               <span>API 反代</span>
+            </button>
+            <button class="sidebar-link" data-view="chat">
+              <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+              <span>AI 对话</span>
+            </button>
+            <button class="sidebar-link" data-view="kiro-settings">
+              <img src="${kiroIconSvg}" alt="Kiro" class="sidebar-icon" style="width: 20px; height: 20px;" />
+              <span>Kiro 设置</span>
             </button>
             <button class="sidebar-link" data-view="settings">
               <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -237,6 +243,8 @@ export class AccountManager {
       this.renderKiroSettingsView(contentArea)
     } else if (activeView === 'proxy') {
       this.renderProxyView(contentArea)
+    } else if (activeView === 'chat') {
+      this.renderChatView(contentArea)
     } else if (activeView === 'settings') {
       this.renderSettingsView(contentArea)
     }
@@ -276,6 +284,47 @@ export class AccountManager {
     import('./renderers/proxy-view').then(({ renderProxyView, initProxyPage }) => {
       container.innerHTML = renderProxyView()
       initProxyPage(container as HTMLElement)
+    })
+  }
+
+  private renderChatView(container: Element) {
+    import('./renderers/chat-view').then(({ renderChatView, initChatPage }) => {
+      container.innerHTML = renderChatView()
+      initChatPage(container as HTMLElement)
+      
+      // 监听页面切换事件
+      const switchHandler = (e: Event) => {
+        const customEvent = e as CustomEvent<{ page: string }>
+        if (customEvent.detail.page === 'config') {
+          // 切换到配置页面
+          import('./renderers/chat-config-view').then(({ renderChatConfigView, attachChatConfigEvents }) => {
+            container.innerHTML = renderChatConfigView()
+            attachChatConfigEvents(
+              container as HTMLElement,
+              () => {
+                // 保存后返回对话页面
+                container.innerHTML = renderChatView()
+                initChatPage(container as HTMLElement)
+              },
+              () => {
+                // 返回对话页面
+                container.innerHTML = renderChatView()
+                initChatPage(container as HTMLElement)
+              }
+            )
+          })
+        }
+      }
+      
+      window.addEventListener('switch-chat-page', switchHandler)
+      
+      // 清理事件监听器
+      const cleanup = () => {
+        window.removeEventListener('switch-chat-page', switchHandler)
+      }
+      
+      // 保存清理函数（可选，用于页面卸载时清理）
+      ;(container as any).__chatCleanup = cleanup
     })
   }
 
@@ -416,6 +465,12 @@ declare global {
     deselectAllProxyAccounts?: () => void
     closeProxyAccountSelectDialog?: () => void
     confirmProxyAccountSelect?: () => void
+    
+    // 删除账号确认
+    cancelDeleteAccount?: () => void
+    confirmDeleteAccount?: () => void
+    cancelBatchDelete?: () => void
+    confirmBatchDelete?: () => void
     
     // Kiro 设置页面函数
     selectAgentAutonomy?: (value: string) => void
